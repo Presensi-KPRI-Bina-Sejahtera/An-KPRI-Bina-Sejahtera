@@ -108,22 +108,22 @@ fun KpriDialog(
 }
 
 // preview success
-//@Preview(showBackground = true)
-//@Composable
-//fun KpriDialogPreview() {
-//    KPRIBinaSejahteraTheme {
-//        KpriDialog(
-//            title = "Presensi Berhasil!",
-//            message = "Presensi masuk Anda telah berhasil tercatat pada 15:40 WIB.",
-//            iconId = R.drawable.ic_check,
-//            iconContainerColor = SuccessGreen,
-//            onConfirm = {}
-//        )
-//    }
-//}
+@Preview(name = "1. Success Dialog", showBackground = true)
+@Composable
+fun KpriDialogPreview() {
+    KPRIBinaSejahteraTheme {
+        KpriDialog(
+            title = "Presensi Berhasil!",
+            message = "Presensi masuk Anda telah berhasil tercatat pada 15:40 WIB.",
+            iconId = R.drawable.ic_check,
+            iconContainerColor = SuccessGreen,
+            onConfirm = {}
+        )
+    }
+}
 
 // preview warning
-@Preview(showBackground = true)
+@Preview(name = "2. Warning Confirmation", showBackground = true)
 @Composable
 fun KpriWarningDialogPreview() {
     KPRIBinaSejahteraTheme {

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
@@ -86,7 +87,7 @@ fun KpriTextFieldPreview() {
                 value = "",
                 label = "Email",
                 placeholder = "Masukkan Email",
-                iconId = com.kpri.binasejahtera.R.drawable.ic_mail,
+                iconId = R.drawable.ic_mail,
                 onValueChange = {}
             )
         }
