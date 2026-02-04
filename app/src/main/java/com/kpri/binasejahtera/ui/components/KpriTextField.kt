@@ -4,31 +4,35 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun KpriTextField(
     value: String,
-    onValueChange: (String) -> Unit,
     label: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
     placeholder: String,
-    leadingIcon: ImageVector,
+    iconId: Int,
     isPassword: Boolean = false,
-    modifier: Modifier = Modifier
+    iconSize: Dp = 20.dp
 ) {
     Column(
         modifier = modifier.fillMaxWidth()
@@ -49,26 +53,42 @@ fun KpriTextField(
             placeholder = {
                 Text(
                     text = placeholder,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TertiaryGray
                 )
             },
             leadingIcon = {
                 Icon(
-                    imageVector = leadingIcon,
+                    painter = painterResource(id = iconId),
+                    modifier = Modifier.size(iconSize),
                     contentDescription = null,
                     tint = TertiaryGray
                 )
             },
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-            shape = RoundedCornerShape(12.dp),
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = PrimaryBlack,
                 unfocusedBorderColor = TertiaryGray,
-                focusedLabelColor = PrimaryBlack,
-                unfocusedLabelColor = TertiaryGray,
                 cursorColor = PrimaryBlack
             )
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun KpriTextFieldPreview() {
+    KPRIBinaSejahteraTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            KpriTextField(
+                value = "",
+                label = "Email",
+                placeholder = "Masukkan Email",
+                iconId = com.kpri.binasejahtera.R.drawable.ic_mail,
+                onValueChange = {}
+            )
+        }
     }
 }

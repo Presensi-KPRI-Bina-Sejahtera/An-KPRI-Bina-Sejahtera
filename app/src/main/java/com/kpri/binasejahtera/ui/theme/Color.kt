@@ -12,7 +12,7 @@ val SuccessGreen = Color(0xFF00A63E)
 val SuccessContainer = Color(0xFFF0FDF4)
 
 // Error Colors
-val ErrorRed = Color(0xFFE7000B)
+val ErrorRed = Color(0xFFFB2C36)
 val ErrorContainer = Color(0xFFFEF2F2)
 
 // Info
