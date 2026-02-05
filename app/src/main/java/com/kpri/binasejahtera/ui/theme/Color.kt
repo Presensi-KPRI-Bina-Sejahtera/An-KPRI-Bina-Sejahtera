@@ -24,5 +24,5 @@ val InfoContainer = Color(0xFFDBEAFE)
 val AccentBlue = Color(0xFFBEDBFF)
 
 // Background & Surface
-val AppBackground = Color(0xFFF8F9FA)
+val AppBackground = Color(0xFFEBEBEB)
 val AppSurface = Color(0xFFFFFFFF)
