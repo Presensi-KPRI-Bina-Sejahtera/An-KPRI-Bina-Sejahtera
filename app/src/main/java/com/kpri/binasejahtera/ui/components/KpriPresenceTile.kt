@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.SuccessGreen
 
 @Composable
@@ -51,7 +51,7 @@ fun KpriPresenceTile(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = Shapes.medium,
                 color = iconColor.copy(alpha = 0.1f)
             ) {
                 Icon(

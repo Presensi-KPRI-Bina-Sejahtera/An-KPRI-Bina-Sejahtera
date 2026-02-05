@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.Shapes
 
 @Composable
 fun KpriBottomNavigation(
@@ -64,7 +64,7 @@ fun KpriBottomNavigation(
                 .height(64.dp)
                 .fillMaxWidth(),
             color = navBackgroundColor,
-            shape = RoundedCornerShape(12.dp),
+            shape = Shapes.medium,
             shadowElevation = 16.dp
         ) {
             Row(
