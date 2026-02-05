@@ -115,7 +115,7 @@ fun KpriDialogPreview() {
             title = "Presensi Berhasil!",
             message = "Presensi masuk Anda telah berhasil tercatat pada 15:40 WIB.",
             iconId = R.drawable.ic_check,
-            iconContainerColor = SuccessGreen,
+            iconContainerColor = InfoGreen,
             onConfirm = {}
         )
     }

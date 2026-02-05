@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 sealed interface TopBarConfig {
@@ -63,7 +64,10 @@ fun KpriTopBar(
 ) {
     Surface(
         color = PrimaryBlack,
-        shape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp),
+        shape = Shapes.medium.copy(
+            topStart = CornerSize(0.dp),
+            topEnd = CornerSize(0.dp)
+        ),
         modifier = modifier.fillMaxWidth()
     ) {
         when (config) {
@@ -166,21 +170,18 @@ private fun ProfileTopBarContent(config: TopBarConfig.Profile) {
             modifier = Modifier
                 .matchParentSize()
         ) {
-            val width = size.width
-            val height = size.height
-
             // bottom left
             drawCircle(
                 color = Color.White.copy(alpha = 0.05f),
                 radius = 125.dp.toPx(),
-                center = Offset(x = 50f, y = height)
+                center = Offset(x = 50f, y = size.height)
             )
 
             // top right
             drawCircle(
                 color = Color.White.copy(alpha = 0.05f),
                 radius = 100.dp.toPx(),
-                center = Offset(x = width, y = 100f)
+                center = Offset(x = size.width, y = 100f)
             )
         }
 

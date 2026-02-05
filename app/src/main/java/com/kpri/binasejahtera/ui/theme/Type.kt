@@ -34,5 +34,10 @@ val Typography = Typography(
         fontFamily = Nunito,
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = Nunito,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 10.sp
     )
 )
