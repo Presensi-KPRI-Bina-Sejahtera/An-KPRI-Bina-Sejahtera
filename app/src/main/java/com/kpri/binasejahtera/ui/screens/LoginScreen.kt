@@ -9,11 +9,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -59,6 +60,11 @@ fun LoginScreen(
 
     val scrollState = rememberScrollState()
 
+    val loginCardShape = Shapes.medium.copy(
+        bottomStart = CornerSize(0.dp),
+        bottomEnd = CornerSize(0.dp)
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -68,19 +74,19 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 60.dp, bottom = 40.dp),
+                .statusBarsPadding()
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // logo
             Image(
-                painter = painterResource(id = R.drawable.ic_logo_koperasi),
+                painter = painterResource(id = R.drawable.img_logo_koperasi_2),
                 contentDescription = "Logo Koperasi",
                 modifier = Modifier
-                    .size(150.dp)
-                    .shadow(8.dp, shape = CircleShape)
+                    .size(200.dp)
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = "Presensi KPRI\nBina Sejahtera",
@@ -94,13 +100,14 @@ fun LoginScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .shadow(
+                    elevation = 12.dp,
+                    shape = loginCardShape,
+                    spotColor = Color.Black.copy(alpha = 0.5f)
+                )
                 .weight(1f),
-            shape = Shapes.medium.copy(
-                bottomStart = CornerSize(0.dp),
-                bottomEnd = CornerSize(0.dp)
-            ),
-            colors = CardDefaults.cardColors(Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 32.dp)
+            shape = loginCardShape,
+            colors = CardDefaults.cardColors(Color.White)
         ) {
             Column(
                 modifier = Modifier
@@ -116,7 +123,7 @@ fun LoginScreen(
                     modifier = Modifier.align(Alignment.Start)
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = "Silakan masukkan kredensial Anda untuk mengakses aplikasi.",
@@ -125,7 +132,7 @@ fun LoginScreen(
                     modifier = Modifier.align(Alignment.Start)
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // input email
                 KpriTextField(
@@ -137,7 +144,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // input password
                 KpriTextField(
@@ -150,7 +157,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // tombol login
                 KpriPrimaryButton(
@@ -160,7 +167,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // garis divider
                 Row(
@@ -169,23 +176,23 @@ fun LoginScreen(
                 ) {
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
-                        color = SecondaryGray
+                        color = TertiaryGray
                     )
 
                     Text(
                         text = "Or continue with",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TertiaryGray,
-                        modifier = Modifier.padding(horizontal = 10.dp)
+                        style = MaterialTheme.typography.labelMedium,
+                        color = SecondaryGray,
+                        modifier = Modifier.padding(horizontal = 12.dp)
                     )
                     HorizontalDivider(
                         modifier = Modifier
                             .weight(1f),
-                        color = SecondaryGray
+                        color = TertiaryGray
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // tombol login google
                 OutlinedButton(
@@ -216,6 +223,8 @@ fun LoginScreen(
                 }
 
                 Spacer(modifier = Modifier.height(40.dp))
+
+                Spacer(modifier = Modifier.navigationBarsPadding())
 
             }
         }

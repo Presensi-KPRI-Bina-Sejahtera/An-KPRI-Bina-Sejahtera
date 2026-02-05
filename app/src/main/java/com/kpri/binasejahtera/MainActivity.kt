@@ -1,47 +1,53 @@
 package com.kpri.binasejahtera
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.kpri.binasejahtera.ui.screens.LoginScreen
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
+        )
+
         setContent {
             KPRIBinaSejahteraTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                LoginScreen(
+                    onLoginClick = { email, password ->
+                        Toast.makeText(this, "Login: $email, Password $password", Toast.LENGTH_SHORT).show()
+                    },
+                    onGoogleSignInClick = {
+                        Toast.makeText(this, "Google Login Clicked", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
     }
 }
 
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
+fun LoginScreenPreview() {
     KPRIBinaSejahteraTheme {
-        Greeting("Android")
+        LoginScreen(
+            onLoginClick = { _, _ -> },
+            onGoogleSignInClick = {}
+        )
     }
 }

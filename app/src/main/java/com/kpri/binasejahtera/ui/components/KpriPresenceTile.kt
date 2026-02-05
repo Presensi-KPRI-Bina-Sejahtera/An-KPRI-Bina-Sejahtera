@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,10 +42,13 @@ fun KpriPresenceTile(
         shape = MaterialTheme.shapes.medium,
         border = BorderStroke(1.dp, iconColor.copy(alpha = 0.2f)),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .shadow(
+                elevation = 12.dp,
+                Shapes.medium,
+                spotColor = Color.Black.copy(0.5f)
+            )
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -62,18 +64,30 @@ fun KpriTopBar(
     config: TopBarConfig,
     modifier: Modifier = Modifier
 ) {
+    val topBarShape = Shapes.medium.copy(
+        topStart = CornerSize(0.dp),
+        topEnd = CornerSize(0.dp)
+    )
+
     Surface(
         color = PrimaryBlack,
-        shape = Shapes.medium.copy(
-            topStart = CornerSize(0.dp),
-            topEnd = CornerSize(0.dp)
-        ),
-        modifier = modifier.fillMaxWidth()
+        shape = topBarShape,
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 12.dp,
+                shape = topBarShape,
+                spotColor = Color.Black.copy(alpha = 0.5f)
+            )
     ) {
-        when (config) {
-            is TopBarConfig.Home -> HomeTopBarContent(config)
-            is TopBarConfig.Navigation -> NavigationTopBarContent(config)
-            is TopBarConfig.Profile -> ProfileTopBarContent(config)
+        Column(
+            modifier = Modifier.statusBarsPadding()
+        ) {
+            when (config) {
+                is TopBarConfig.Home -> HomeTopBarContent(config)
+                is TopBarConfig.Navigation -> NavigationTopBarContent(config)
+                is TopBarConfig.Profile -> ProfileTopBarContent(config)
+            }
         }
     }
 }
@@ -82,12 +96,9 @@ fun KpriTopBar(
 private fun HomeTopBarContent(config: TopBarConfig.Home) {
     Row(
         modifier = Modifier
-            .padding(
-                horizontal = 16.dp,
-                vertical = 16.dp
-            )
+            .padding(16.dp)
             .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
             shape = CircleShape,
@@ -228,7 +239,7 @@ fun TopBarHomePreview() {
             config = TopBarConfig.Home(
                 greeting = "Selamat datang,",
                 name = "Endra Zhafir",
-                userPhotoId = R.drawable.ic_profile // placeholder
+                userPhotoId = R.drawable.profilepicture
             )
         )
     }
@@ -256,7 +267,7 @@ fun TopBarProfilePreview() {
             config = TopBarConfig.Profile(
                 name = "Endra Zhafir",
                 username = "endra_zhafir",
-                userPhotoId = R.drawable.ic_profile
+                userPhotoId = R.drawable.profilepicture
             )
         )
     }

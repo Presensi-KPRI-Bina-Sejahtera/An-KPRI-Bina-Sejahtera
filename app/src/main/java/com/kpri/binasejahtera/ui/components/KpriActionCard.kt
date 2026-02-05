@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,8 +51,13 @@ fun KpriActionCard(
         shape = Shapes.medium,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         border = if (isDestructive) BorderStroke(1.dp, borderColor) else BorderStroke(1.dp, color = BorderGray),
-        elevation = CardDefaults.cardElevation(4.dp),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 12.dp,
+                Shapes.medium,
+                spotColor = Color.Black.copy(0.5f)
+            )
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

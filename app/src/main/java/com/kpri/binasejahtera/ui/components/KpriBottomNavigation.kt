@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,7 +39,8 @@ import com.kpri.binasejahtera.ui.theme.Shapes
 @Composable
 fun KpriBottomNavigation(
     currentRoute: String,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val isPresenceActive = currentRoute == "presence"
 
@@ -53,7 +55,7 @@ fun KpriBottomNavigation(
 
     // box untuk tombol presensi yang nonjol
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(96.dp)
     ) {
@@ -62,10 +64,14 @@ fun KpriBottomNavigation(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .height(64.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .shadow(
+                    elevation = 12.dp,
+                    Shapes.medium,
+                    spotColor = Color.Black.copy(0.5f)
+                ),
             color = navBackgroundColor,
-            shape = Shapes.medium,
-            shadowElevation = 16.dp
+            shape = Shapes.medium
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 40.dp),
