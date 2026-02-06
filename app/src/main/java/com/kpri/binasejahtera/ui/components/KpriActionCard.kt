@@ -96,7 +96,7 @@ fun KpriActionCard(
 
             if (!isDestructive) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_right),
+                    painter = painterResource(id = R.drawable.ic_arrow_go),
                     contentDescription = null,
                     tint = TertiaryGray,
                     modifier = Modifier.size(20.dp)

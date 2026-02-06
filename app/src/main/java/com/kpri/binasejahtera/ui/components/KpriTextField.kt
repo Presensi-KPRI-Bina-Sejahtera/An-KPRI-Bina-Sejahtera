@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -13,6 +14,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -31,9 +33,12 @@ fun KpriTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String,
-    iconId: Int,
+    iconId: Int? = null,
+    prefixText: String? = null,
     isPassword: Boolean = false,
-    iconSize: Dp = 20.dp
+    iconSize: Dp = 20.dp,
+    iconColor: Color = TertiaryGray,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(
         modifier = modifier.fillMaxWidth()
@@ -58,27 +63,40 @@ fun KpriTextField(
                     color = TertiaryGray
                 )
             },
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(id = iconId),
-                    modifier = Modifier.size(iconSize),
-                    contentDescription = null,
-                    tint = TertiaryGray
-                )
-            },
+            leadingIcon = if (iconId != null) {
+                {
+                    Icon(
+                        painter = painterResource(id = iconId),
+                        modifier = Modifier.size(iconSize),
+                        contentDescription = null,
+                        tint = iconColor
+                    )
+                }
+            } else if (prefixText != null) {
+                {
+                    Text(
+                        text = prefixText,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TertiaryGray
+                    )
+                }
+            } else null,
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+            keyboardOptions = keyboardOptions,
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = PrimaryBlack,
-                unfocusedBorderColor = TertiaryGray,
+                unfocusedBorderColor = TertiaryGray.copy(alpha = 0.3f),
+                focusedContainerColor = TertiaryGray.copy(alpha = 0.05f),
+                unfocusedContainerColor = TertiaryGray.copy(alpha = 0.05f),
                 cursorColor = PrimaryBlack
             )
         )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "1. Email", showBackground = true)
 @Composable
 fun KpriTextFieldPreview() {
     KPRIBinaSejahteraTheme {
