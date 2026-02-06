@@ -20,8 +20,8 @@ val ErrorContainer = Color(0xFFFECDD3)
 val InfoRed = Color(0xFFBE123C)
 val InfoGreen = Color(0xFF008235)
 val InfoBlue = Color(0xFF1447E6)
-val InfoContainer = Color(0xFFDBEAFE)
-val AccentBlue = Color(0xFFBEDBFF)
+val InfoContainer = Color(0xFFEFF6FF)
+val AccentBlue = Color(0xFFDBEAFE)
 
 // Background & Surface
 val AppBackground = Color(0xFFEBEBEB)
