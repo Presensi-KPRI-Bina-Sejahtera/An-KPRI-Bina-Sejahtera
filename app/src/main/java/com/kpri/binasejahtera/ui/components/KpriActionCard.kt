@@ -113,7 +113,7 @@ fun KpriActionCardPreview() {
         Column(modifier = Modifier.padding(16.dp)) {
             KpriActionCard(
                 title = "Informasi Pribadi",
-                subtitle = "Nama, Email, No HP",
+                subtitle = "Nama, Email",
                 iconId = R.drawable.ic_profile,
                 onClick = {}
             )

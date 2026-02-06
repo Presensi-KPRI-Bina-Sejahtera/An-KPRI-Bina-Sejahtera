@@ -252,7 +252,7 @@ fun HomeScreen(
                     onClick = {}
                 )
 
-                Spacer(modifier = Modifier.height(130.dp))
+                Spacer(modifier = Modifier.height(120.dp))
 
             }
         }

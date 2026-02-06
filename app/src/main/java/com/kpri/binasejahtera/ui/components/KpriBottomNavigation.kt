@@ -33,8 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
-import com.kpri.binasejahtera.ui.theme.PrimaryBlack
-import com.kpri.binasejahtera.ui.theme.Shapes
+import com.kpri.binasejahtera.ui.theme.*
 
 @Composable
 fun KpriBottomNavigation(
@@ -50,8 +49,8 @@ fun KpriBottomNavigation(
         animationSpec = tween(durationMillis = 500), label = "navBg"
     )
 
-    val unselectedContentColor = if (isPresenceActive) Color.White else PrimaryBlack
-    val selectedContentColor = if (isPresenceActive) Color.White else PrimaryBlack
+    val activeContentColor = if (isPresenceActive) Color.White else PrimaryBlack
+    val inactiveContentColor = if (isPresenceActive) Color.White else TertiaryGray
 
     // box untuk tombol presensi yang nonjol
     Box(
@@ -83,8 +82,8 @@ fun KpriBottomNavigation(
                     iconId = R.drawable.ic_home,
                     label = "Home",
                     isSelected = currentRoute == "home",
-                    activeColor = selectedContentColor,
-                    inactiveColor = unselectedContentColor,
+                    activeColor = activeContentColor,
+                    inactiveColor = inactiveContentColor,
                     onClick = { onNavigate("home") }
                 )
 
@@ -96,8 +95,8 @@ fun KpriBottomNavigation(
                     iconId = R.drawable.ic_profile,
                     label = "Profile",
                     isSelected = currentRoute == "profile",
-                    activeColor = selectedContentColor,
-                    inactiveColor = unselectedContentColor,
+                    activeColor = activeContentColor,
+                    inactiveColor = inactiveContentColor,
                     onClick = { onNavigate("profile") }
                 )
             }
