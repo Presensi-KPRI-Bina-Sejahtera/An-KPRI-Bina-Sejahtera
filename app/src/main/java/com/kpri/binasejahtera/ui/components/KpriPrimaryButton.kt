@@ -42,14 +42,21 @@ fun KpriPrimaryButton(
     height: Dp = 56.dp,
     isIconStart: Boolean = false
 ) {
+
+    val finalContainerColor = if (enabled) containerColor else TertiaryGray.copy(alpha = 0.25f)
+    val finalContentColor = if (enabled) contentColor else TertiaryGray
+    val finalBorder = if (enabled) border else BorderStroke(1.dp, TertiaryGray.copy(alpha = 0.3f))
+
     Button(
         onClick = onClick,
         enabled = enabled,
         shape = MaterialTheme.shapes.medium,
-        border = border,
+        border = finalBorder,
         colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = Color.White
+            containerColor = finalContainerColor,
+            contentColor = finalContentColor,
+            disabledContainerColor = finalContainerColor,
+            disabledContentColor = finalContentColor
         ),
         modifier = modifier
             .fillMaxWidth()
@@ -65,7 +72,7 @@ fun KpriPrimaryButton(
                     painter = painterResource(id = iconId),
                     modifier = Modifier.size(iconSize),
                     contentDescription = null,
-                    tint = contentColor
+                    tint = finalContentColor
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -75,7 +82,7 @@ fun KpriPrimaryButton(
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
-                color = contentColor
+                color = finalContentColor
             )
 
             if (iconId != null && !isIconStart) {
@@ -86,7 +93,7 @@ fun KpriPrimaryButton(
                     painter = painterResource(id = iconId),
                     modifier = Modifier.size(iconSize),
                     contentDescription = null,
-                    tint = contentColor
+                    tint = finalContentColor
                 )
 
             }
@@ -94,7 +101,7 @@ fun KpriPrimaryButton(
     }
 }
 
-@Preview(name = "1. Solid Button", showBackground = true)
+@Preview(name = "1. Solid Button (Enabled)", showBackground = true)
 @Composable
 fun PrimaryButtonSolidPreview() {
     KPRIBinaSejahteraTheme {
@@ -118,8 +125,24 @@ fun PrimaryButtonOutlinedPreview() {
                 iconId = R.drawable.ic_plus,
                 containerColor = Color.Transparent,
                 contentColor = TertiaryGray,
-                border = BorderStroke(1.dp, TertiaryGray.copy(alpha = 0.5f)),
+                border = BorderStroke(1.dp, TertiaryGray.copy(alpha = 0.3f)),
                 isIconStart = true,
+                onClick = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "3. Disabled State (Greyed Out)", showBackground = true)
+@Composable
+fun PrimaryButtonDisabledPreview() {
+    KPRIBinaSejahteraTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            KpriPrimaryButton(
+                text = "Presensi Pulang Sekarang",
+                iconId = R.drawable.ic_map,
+                isIconStart = true,
+                enabled = false,
                 onClick = {}
             )
         }

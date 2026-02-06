@@ -288,7 +288,7 @@ fun TypeButton(
                             Modifier
                                 .border(
                                     2.dp,
-                                    TertiaryGray.copy(alpha = 0.5f),
+                                    TertiaryGray.copy(alpha = 0.3f),
                                     CircleShape)
                                 .background(Color.Transparent)
                         }
