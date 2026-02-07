@@ -178,13 +178,15 @@ fun AppNavGraph(
             LaunchedEffect(true) {
                 viewModel.authEvent.collect { event ->
                     if (event is AuthViewModel.AuthEvent.Success) {
-                        if (event.message.contains("Logout", ignoreCase = true) || event.message.contains("Keluar", ignoreCase = true)) {
+                        if (event.message.contains("Logout", ignoreCase = true)) {
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(0) { inclusive = true }
                             }
                         } else {
-                            ToastManager.show("Gagal Trigger: Pesannya '${event.message}'", ToastType.ERROR)
+                            ToastManager.show(event.message, ToastType.SUCCESS)
                         }
+                    } else if (event is AuthViewModel.AuthEvent.Error) {
+                        ToastManager.show(event.message, ToastType.ERROR)
                     }
                 }
             }

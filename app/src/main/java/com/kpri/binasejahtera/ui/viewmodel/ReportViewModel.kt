@@ -34,27 +34,35 @@ class ReportViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
 
+            // hapus karakter non-digit biar aman saat parsing
+            val cleanIncome = income.replace(Regex("[^0-9]"), "")
+            val cleanExpense = expense.replace(Regex("[^0-9]"), "")
+
             // kirim pemasukan cashflow
             val incomeLong = income.toLongOrNull() ?: 0L
             val expenseLong = expense.toLongOrNull() ?: 0L
 
+            var isCashflowError = false
             repository.sendCashflow(CashflowRequest(incomeLong, expenseLong)).collect { cashResult ->
                 if (cashResult is Resource.Error) {
                     _isLoading.value = false
-                    _reportEvent.send(ReportEvent.Error("Gagal kirim pemasukan: ${cashResult.message}"))
-                    return@collect
+                    _reportEvent.send(ReportEvent.Error("Gagal kirim keuangan: ${cashResult.message}"))
+                    isCashflowError = true
                 }
             }
+            if (isCashflowError) return@launch
 
             // kirim setoran (klo ada)
             if (deposits.isNotEmpty()) {
+                var isDepositError = false
                 repository.sendDeposits(DepositRequest(deposits)).collect { depositResult ->
                     if (depositResult is Resource.Error) {
                         _isLoading.value = false
                         _reportEvent.send(ReportEvent.Error("Gagal kirim setoran: ${depositResult.message}"))
-                        return@collect
+                        isDepositError = true
                     }
                 }
+                if (isDepositError) return@launch
             }
 
             _isLoading.value = false
