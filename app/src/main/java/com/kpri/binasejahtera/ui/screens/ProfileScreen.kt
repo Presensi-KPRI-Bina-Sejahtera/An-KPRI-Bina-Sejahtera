@@ -45,8 +45,8 @@ fun ProfileScreen(
                 currentRoute = "profile",
                 onNavigate = onNavigate,
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
             )
         },
         containerColor = AppBackground

@@ -19,48 +19,52 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 
 interface ApiService {
+
     // --- Auth ---
-    @POST("login")
+    @POST("auth/login")
     suspend fun login(
         @Body request: LoginRequest
     ): Response<BaseResponse<LoginResponse>>
 
-    @POST("auth/google")
+    @POST("auth/login-google")
     suspend fun googleLogin(
         @Body request: GoogleLoginRequest
     ): Response<BaseResponse<LoginResponse>>
 
-    @POST("logout")
+    @POST("auth/logout")
     suspend fun logout(): Response<BaseResponse<Any>>
 
-    @POST("change-password")
-    suspend fun changePassword(
-        @Body request: ChangePasswordRequest
-    ): Response<BaseResponse<Any>>
-
     // --- Profile ---
-    @GET("employee/profile")
+    @GET("profile/me")
     suspend fun getProfile(): Response<BaseResponse<ProfileResponse>>
 
-    @POST("employee/profile/update")
+    @PUT("profile/update")
     suspend fun updateProfile(
         @Body request: UpdateProfileRequest
     ): Response<BaseResponse<ProfileResponse>>
 
+    @PUT("profile/update-password")
+    suspend fun changePassword(
+        @Body request: ChangePasswordRequest
+    ): Response<BaseResponse<Any>>
+
     @Multipart
-    @POST("employee/profile/upload-photo")
+    @PUT("profile/photo")
     suspend fun uploadPhoto(
         @Part photo: MultipartBody.Part
     ): Response<BaseResponse<Any>>
 
     // --- Home & Office ---
-    @GET("employee/home")
+    // Note: Pastikan response JSON dari endpoint ini cocok dengan HomeDataResponse
+    // Jika 'address' isinya cuma string alamat, DTO ini mungkin perlu disesuaikan.
+    @GET("address")
     suspend fun getHomeData(): Response<BaseResponse<HomeDataResponse>>
 
-    @GET("office")
+    @GET("employee/presence-location")
     suspend fun getOfficeLocation(): Response<BaseResponse<OfficeResponse>>
 
     // --- Attendance ---
@@ -75,13 +79,11 @@ interface ApiService {
     ): Response<BaseResponse<Any>>
 
     // --- Report ---
-    // cashflow
     @POST("employee/cashflow")
     suspend fun sendCashflow(
         @Body request: CashflowRequest
     ): Response<BaseResponse<Any>>
 
-    // deposit
     @POST("employee/deposit")
     suspend fun sendDeposits(
         @Body request: DepositRequest

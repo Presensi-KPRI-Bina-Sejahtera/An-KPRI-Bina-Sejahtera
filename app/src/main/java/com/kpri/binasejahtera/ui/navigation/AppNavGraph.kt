@@ -1,5 +1,9 @@
 package com.kpri.binasejahtera.ui.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,12 +36,33 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+
+        enterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400))
+        },
+        exitTransition = {
+            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400))
+        },
+        popEnterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400))
+        },
+        popExitTransition = {
+            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400))
+        }
     ) {
         // --- Login ---
         composable(Screen.Login.route) {
             val viewModel: AuthViewModel = hiltViewModel()
-            val state by viewModel.isLoading.collectAsState()
+            val isUserLoggedIn by viewModel.isUserLoggedIn.collectAsState()
+
+            LaunchedEffect(isUserLoggedIn) {
+                if (isUserLoggedIn) {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            }
 
             LaunchedEffect(true) {
                 viewModel.authEvent.collect { event ->
@@ -55,15 +80,6 @@ fun AppNavGraph(
                 }
             }
 
-            val isUserLoggedIn by viewModel.isUserLoggedIn.collectAsState()
-            LaunchedEffect(isUserLoggedIn) {
-                if (isUserLoggedIn) {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
-                }
-            }
-
             LoginScreen(
                 onLoginClick = { email, pass -> viewModel.login(email, pass) },
                 onGoogleSignInClick = { /* TODO: Implement Google Sign In Launch */ }
@@ -71,7 +87,13 @@ fun AppNavGraph(
         }
 
         // --- Home ---
-        composable(Screen.Home.route) {
+        composable(
+            Screen.Home.route,
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) },
+            popEnterTransition = { fadeIn(tween(300)) },
+            popExitTransition = { fadeOut(tween(300)) }
+        ) {
             val viewModel: AttendanceViewModel = hiltViewModel()
             // Nanti bind data home dari viewModel disini (homeData.collectAsState)
 
@@ -87,12 +109,51 @@ fun AppNavGraph(
         }
 
         // --- Presence Selection (BottomNavigation) ---
-        composable(Screen.Presence.route) {
+        composable(
+            Screen.Presence.route,
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) },
+            popEnterTransition = { fadeIn(tween(300)) },
+            popExitTransition = { fadeOut(tween(300)) }
+        ) {
             PresenceScreen(
                 onNavigate = { route ->
                     when (route) {
                         "attendance_in" -> navController.navigate(Screen.PresenceConfirmation.createRoute(true))
                         "attendance_out" -> navController.navigate(Screen.DailyReport.route)
+                        else -> navController.navigate(route)
+                    }
+                }
+            )
+        }
+
+        // --- Profile ---
+        composable(
+            Screen.Profile.route,
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) },
+            popEnterTransition = { fadeIn(tween(300)) },
+            popExitTransition = { fadeOut(tween(300)) }
+        ) {
+            val viewModel: AuthViewModel = hiltViewModel()
+
+            LaunchedEffect(true) {
+                viewModel.authEvent.collect { event ->
+                    if (event is AuthViewModel.AuthEvent.Success && event.message.contains("Logout")) {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            }
+
+            ProfileScreen(
+                onNavigate = { route ->
+                    when (route) {
+                        "login" -> viewModel.logout()
+                        "personal_info" -> navController.navigate(Screen.EditProfile.route)
+                        "change_password" -> navController.navigate(Screen.ChangePassword.route)
                         else -> navController.navigate(route)
                     }
                 }
@@ -105,14 +166,11 @@ fun AppNavGraph(
 
             LaunchedEffect(true) {
                 viewModel.reportEvent.collect { event ->
-                    when(event) {
-                        is ReportViewModel.ReportEvent.Success -> {
-                            ToastManager.show(event.message, ToastType.SUCCESS)
-                            navController.navigate(Screen.PresenceConfirmation.createRoute(false))
-                        }
-                        is ReportViewModel.ReportEvent.Error -> {
-                            ToastManager.show(event.message, ToastType.ERROR)
-                        }
+                    if (event is ReportViewModel.ReportEvent.Success) {
+                        ToastManager.show(event.message, ToastType.SUCCESS)
+                        navController.navigate(Screen.PresenceConfirmation.createRoute(false))
+                    } else if (event is ReportViewModel.ReportEvent.Error) {
+                        ToastManager.show(event.message, ToastType.ERROR)
                     }
                 }
             }
@@ -144,16 +202,13 @@ fun AppNavGraph(
 
             LaunchedEffect(true) {
                 viewModel.attendanceEvent.collect { event ->
-                    when (event) {
-                        is AttendanceViewModel.AttendanceEvent.Success -> {
-                            ToastManager.show(event.message, ToastType.SUCCESS)
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Home.route) { inclusive = true }
-                            }
+                    if (event is AttendanceViewModel.AttendanceEvent.Success) {
+                        ToastManager.show(event.message, ToastType.SUCCESS)
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
                         }
-                        is AttendanceViewModel.AttendanceEvent.Error -> {
-                            ToastManager.show(event.message, ToastType.ERROR)
-                        }
+                    } else if (event is AttendanceViewModel.AttendanceEvent.Error) {
+                        ToastManager.show(event.message, ToastType.ERROR)
                     }
                 }
             }
@@ -167,32 +222,6 @@ fun AppNavGraph(
                     // Dummy LatLong sementara
                     if (isCheckIn) viewModel.checkIn(-6.2, 106.8, "Lokasi Dummy")
                     else viewModel.checkOut(-6.2, 106.8, "Lokasi Dummy")
-                }
-            )
-        }
-
-        // --- Profile ---
-        composable(Screen.Profile.route) {
-            val viewModel: AuthViewModel = hiltViewModel()
-
-            LaunchedEffect(true) {
-                viewModel.authEvent.collect { event ->
-                    if (event is AuthViewModel.AuthEvent.Success && event.message.contains("Logout")) {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                }
-            }
-
-            ProfileScreen(
-                onNavigate = { route ->
-                    when (route) {
-                        "login" -> viewModel.logout()
-                        "personal_info" -> navController.navigate(Screen.EditProfile.route)
-                        "change_password" -> navController.navigate(Screen.ChangePassword.route)
-                        else -> navController.navigate(route)
-                    }
                 }
             )
         }
