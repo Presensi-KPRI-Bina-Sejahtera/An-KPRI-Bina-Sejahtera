@@ -234,9 +234,30 @@ fun AppNavGraph(
         // --- Edit Profile ---
         composable(Screen.EditProfile.route) {
             val viewModel: ProfileViewModel = hiltViewModel()
+            val profileState by viewModel.profileState.collectAsState()
+
+            LaunchedEffect(true) {
+                viewModel.profileEvent.collect { event ->
+                    when(event) {
+                        is ProfileViewModel.ProfileEvent.Success -> {
+                            ToastManager.show(event.message, ToastType.SUCCESS)
+                        }
+                        is ProfileViewModel.ProfileEvent.Error -> {
+                            ToastManager.show(event.message, ToastType.ERROR)
+                        }
+                    }
+                }
+            }
 
             EditProfileScreen(
-                onNavigateBack = { navController.popBackStack() }
+                state = profileState,
+                onNavigateBack = { navController.popBackStack() },
+                onSaveProfile = { name, email, username ->
+                    viewModel.updateProfile(name, email, username)
+                },
+                onUploadPhoto = { photoPart ->
+                    viewModel.uploadPhoto(photoPart)
+                }
             )
         }
 
@@ -244,8 +265,21 @@ fun AppNavGraph(
         composable(Screen.ChangePassword.route) {
             val viewModel: AuthViewModel = hiltViewModel()
 
+            LaunchedEffect(true) {
+                viewModel.authEvent.collect { event ->
+                    if (event is AuthViewModel.AuthEvent.Success) {
+                        ToastManager.show(event.message, ToastType.SUCCESS)
+                        navController.popBackStack()
+                    }
+                    // ...
+                }
+            }
+
             ChangePasswordScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onSavePassword = { current, new, confirm ->
+                    viewModel.changePassword(current, new, confirm)
+                }
             )
         }
     }

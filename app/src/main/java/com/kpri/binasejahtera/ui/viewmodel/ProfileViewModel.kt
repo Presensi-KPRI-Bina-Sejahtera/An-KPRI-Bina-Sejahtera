@@ -51,9 +51,12 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun updateProfile(name: String, email: String, phone: String) {
+    fun updateProfile(name: String, email: String, username: String) {
         viewModelScope.launch {
-            repository.updateProfile(UpdateProfileRequest(name, email, phone)).collect { result ->
+            _isLoading.value = true
+            val request = UpdateProfileRequest(name, email, username)
+
+            repository.updateProfile(request).collect { result ->
                 when (result) {
                     is Resource.Loading -> _isLoading.value = true
                     is Resource.Success -> {
@@ -72,6 +75,7 @@ class ProfileViewModel @Inject constructor(
 
     fun uploadPhoto(photo: MultipartBody.Part) {
         viewModelScope.launch {
+            _isLoading.value = true
             repository.uploadPhoto(photo).collect { result ->
                 when (result) {
                     is Resource.Loading -> _isLoading.value = true

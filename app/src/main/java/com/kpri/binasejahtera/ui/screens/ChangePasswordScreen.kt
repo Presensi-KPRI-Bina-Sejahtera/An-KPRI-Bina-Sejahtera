@@ -36,9 +36,10 @@ import com.kpri.binasejahtera.ui.theme.Shapes
 
 @Composable
 fun ChangePasswordScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onSavePassword: (current: String, new: String, confirm: String) -> Unit
 ) {
-    var oldPass by remember { mutableStateOf("") }
+    var currentPass by remember { mutableStateOf("") }
     var newPass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
 
@@ -84,12 +85,12 @@ fun ChangePasswordScreen(
 
             // input form
             KpriTextField(
-                value = oldPass,
+                value = currentPass,
                 label = "Password Saat Ini",
                 placeholder = "Masukkan password lama",
                 iconId = R.drawable.ic_lock,
                 isPassword = true,
-                onValueChange = { oldPass = it },
+                onValueChange = { currentPass = it },
                 backgroundColor = Color.White,
                 hasShadow = true
             )
@@ -125,7 +126,9 @@ fun ChangePasswordScreen(
             // tombol update
             KpriPrimaryButton(
                 text = "Update Password",
-                onClick = { onNavigateBack() },
+                onClick = {
+                    onSavePassword(currentPass, newPass, confirmPass)
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -138,6 +141,11 @@ fun ChangePasswordScreen(
 @Composable
 fun ChangePasswordPreview() {
     KPRIBinaSejahteraTheme {
-        ChangePasswordScreen(onNavigateBack = {})
+        ChangePasswordScreen(
+            onNavigateBack = {},
+            onSavePassword = { current, new, confirm ->
+                // simulasi callback, kosongin aja
+            }
+        )
     }
 }
