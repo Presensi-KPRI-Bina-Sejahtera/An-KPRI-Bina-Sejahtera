@@ -1,5 +1,6 @@
 package com.kpri.binasejahtera.ui.navigation
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -7,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -197,14 +199,15 @@ fun AppNavGraph(
         composable(Screen.Profile.route) {
             val viewModel: AuthViewModel = hiltViewModel()
 
+            val context = LocalContext.current
+
             LaunchedEffect(true) {
                 viewModel.authEvent.collect { event ->
                     if (event is AuthViewModel.AuthEvent.Success) {
-                        if (event.message.contains("Logout", ignoreCase = true)) {
-                            navController.navigate(Screen.Login.route) {
-                                popUpTo(0) { inclusive = true }
-                            }
+                        if (event.message.contains("Logout", ignoreCase = true) || event.message.contains("Keluar", ignoreCase = true)) {
+                            (context as? Activity)?.finishAffinity()
                         } else {
+                            // Kalau sukses update profil/password biasa
                             ToastManager.show(event.message, ToastType.SUCCESS)
                         }
                     } else if (event is AuthViewModel.AuthEvent.Error) {
