@@ -22,7 +22,11 @@ import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriPresenceTile
 import com.kpri.binasejahtera.ui.theme.AppBackground
-import com.kpri.binasejahtera.ui.theme.*
+import com.kpri.binasejahtera.ui.theme.ErrorRed
+import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.SuccessGreen
+import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun PresenceScreen(

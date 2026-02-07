@@ -11,6 +11,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -21,21 +25,44 @@ import com.kpri.binasejahtera.ui.components.KpriActionCard
 import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriTopBar
 import com.kpri.binasejahtera.ui.components.TopBarConfig
+import com.kpri.binasejahtera.ui.components.KpriDialog
 import com.kpri.binasejahtera.ui.theme.AppBackground
+import com.kpri.binasejahtera.ui.theme.ErrorRed
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun ProfileScreen(
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        KpriDialog(
+            title = "Konfirmasi Keluar",
+            message = "Apakah Anda yakin ingin keluar dari aplikasi? Anda harus login kembali untuk mengakses akun Anda.",
+            confirmText = "Ya, Keluar",
+            secondaryButtonText = "Batal",
+            iconId = R.drawable.ic_warn,
+            iconContainerColor = ErrorRed,
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            },
+            onSecondaryClick = {
+                showLogoutDialog = false
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             KpriTopBar(
                 config = TopBarConfig.Profile(
                     name = "Endra Zhafir",
                     username = "endra_zhafir",
-                    userPhotoId = R.drawable.profilepicture
+                    userPhotoUrl = null
                 )
             )
         },
@@ -45,8 +72,8 @@ fun ProfileScreen(
                 currentRoute = "profile",
                 onNavigate = onNavigate,
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
             )
         },
         containerColor = AppBackground
@@ -85,13 +112,11 @@ fun ProfileScreen(
 
             // tombol keluar
             KpriActionCard(
-                title = "Logout",
+                title = "Keluar Aplikasi",
                 iconId = R.drawable.ic_out,
                 isDestructive = true,
-                onClick = { onNavigate("login") }
+                onClick = { showLogoutDialog = true }
             )
-
-            Spacer(modifier = Modifier.weight(1f))
 
             // versi app
             Spacer(modifier = Modifier.height(40.dp))
@@ -113,6 +138,9 @@ fun ProfileScreen(
 @Composable
 fun ProfileScreenPreview() {
     KPRIBinaSejahteraTheme {
-        ProfileScreen(onNavigate = {})
+        ProfileScreen(
+            onNavigate = {},
+            onLogout = {}
+        )
     }
 }

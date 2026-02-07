@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,25 +43,36 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.R
+import com.kpri.binasejahtera.data.remote.dto.DepositItemDto
 import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
 import com.kpri.binasejahtera.ui.components.KpriTextField
 import com.kpri.binasejahtera.ui.components.KpriTopBar
 import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.theme.AppBackground
-import com.kpri.binasejahtera.ui.theme.*
+import com.kpri.binasejahtera.ui.theme.ErrorRed
+import com.kpri.binasejahtera.ui.theme.InfoBlue
+import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.Shapes
+import com.kpri.binasejahtera.ui.theme.SuccessGreen
+import com.kpri.binasejahtera.ui.theme.TertiaryGray
+
+data class DepositUiState(
+    val id: Long = System.currentTimeMillis(),
+    var name: String = "",
+    var amount: String = "",
+    var isSimpanan: Boolean = true
+)
 
 @Composable
 fun DailyReportScreen(
     onNavigateBack: () -> Unit,
-    onNavigateNext: () -> Unit
+    onNavigateNext: (pemasukan: String, pengeluaran: String, deposits: List<DepositItemDto>) -> Unit
 ) {
     var pemasukan by remember { mutableStateOf("") }
     var pengeluaran by remember { mutableStateOf("") }
 
-    var namaAnggota by remember { mutableStateOf("") }
-    var jumlahSetoran by remember { mutableStateOf("") }
-
-    var isSimpanan by remember { mutableStateOf(true) }
+    val depositList = remember { mutableStateListOf(DepositUiState()) }
 
     Scaffold(
         topBar = {
@@ -88,6 +100,7 @@ fun DailyReportScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // keuangan toko
             Card(
                 colors = CardDefaults.cardColors(Color.White),
                 shape = Shapes.medium,
@@ -131,48 +144,18 @@ fun DailyReportScreen(
 
             SectionHeader(text = "Setoran Anggota", iconId = R.drawable.ic_card)
 
-            Spacer(modifier = Modifier.height(12.dp))
+            depositList.forEachIndexed { index, deposit ->
 
-            Card(
-                colors = CardDefaults.cardColors(Color.White),
-                shape = Shapes.medium,
-                modifier = Modifier
-                    .shadow(
-                        elevation = 12.dp,
-                        Shapes.medium,
-                        spotColor = Color.Black.copy(0.5f)
-                    )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Spacer(modifier = Modifier.height(12.dp))
 
-                    KpriTextField(
-                        value = namaAnggota,
-                        label = "Nama Anggota",
-                        placeholder = "Masukkan nama...",
-                        iconId = R.drawable.ic_profile,
-                        onValueChange = { namaAnggota = it }
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // tombol toggle simpanan/angsuran
-                    ReportTypeToggle(
-                        isSimpanan = isSimpanan,
-                        onToggle = { isSimpanan = it }
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // jumlah setoran
-                    KpriTextField(
-                        value = jumlahSetoran,
-                        label = "Jumlah Setoran",
-                        placeholder = "0",
-                        prefixText = "Rp ",
-                        onValueChange = { jumlahSetoran = it },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                }
+                DepositCard(
+                    state = deposit,
+                    isExtraCard = index > 0,
+                    onRemove = { depositList.removeAt(index) },
+                    onNameChange = { deposit.name = it },
+                    onAmountChange = { deposit.amount = it },
+                    onTypeChange = { deposit.isSimpanan = it }
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -181,7 +164,7 @@ fun DailyReportScreen(
             KpriPrimaryButton(
                 text = "Tambah Setoran Lain",
                 iconId = R.drawable.ic_plus,
-                onClick = { /* TODO */ },
+                onClick = { depositList.add(DepositUiState(id = System.currentTimeMillis())) },
                 containerColor = Color.Transparent,
                 contentColor = TertiaryGray,
                 isIconStart = true,
@@ -194,8 +177,21 @@ fun DailyReportScreen(
             // tombol lanjut
             KpriPrimaryButton(
                 text = "Lanjut ke Presensi Pulang",
-                iconId = R.drawable.ic_arrow_right,
-                onClick = onNavigateNext,
+                iconId = R.drawable.ic_arrow_go,
+                onClick = {
+                    val dtoList = depositList.map { item ->
+                        DepositItemDto(
+                            memberName = item.name,
+                            type = if (item.isSimpanan) "Simpanan" else "Angsuran",
+                            amount = item.amount
+                                .replace(Regex("[^0-9]"), "")
+                                .toLongOrNull() ?: 0L
+                        )
+                    }
+
+                    onNavigateNext(pemasukan, pengeluaran, dtoList)
+
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -203,6 +199,77 @@ fun DailyReportScreen(
         }
     }
 }
+
+@Composable
+fun DepositCard(
+    state: DepositUiState,
+    isExtraCard: Boolean,
+    onRemove: () -> Unit,
+    onNameChange: (String) -> Unit,
+    onAmountChange: (String) -> Unit,
+    onTypeChange: (Boolean) -> Unit
+) {
+    var localName by remember { mutableStateOf(state.name) }
+    var localAmount by remember { mutableStateOf(state.amount) }
+    var localIsSimpanan by remember { mutableStateOf(state.isSimpanan) }
+
+    Card(
+        colors = CardDefaults.cardColors(Color.White),
+        shape = Shapes.medium,
+        modifier = Modifier.shadow(12.dp, Shapes.medium, spotColor = Color.Black.copy(0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            if (isExtraCard) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_close),
+                        contentDescription = "Hapus",
+                        tint = PrimaryBlack,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { onRemove() }
+                    )
+                }
+            }
+
+            KpriTextField(
+                value = localName,
+                label = "Nama Anggota",
+                placeholder = "Masukkan nama...",
+                iconId = R.drawable.ic_profile,
+                onValueChange = {
+                    localName = it
+                    onNameChange(it)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ReportTypeToggle(
+                isSimpanan = localIsSimpanan,
+                onToggle = {
+                    localIsSimpanan = it
+                    onTypeChange(it)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            KpriTextField(
+                value = localAmount,
+                label = "Jumlah Setoran",
+                placeholder = "0",
+                prefixText = "Rp ",
+                onValueChange = {
+                    localAmount = it
+                    onAmountChange(it)
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        }
+    }
+}
+
 
 @Composable
 fun SectionHeader(text: String, iconId: Int) {
@@ -311,6 +378,9 @@ fun TypeButton(
 @Composable
 fun DailyReportPreview() {
     KPRIBinaSejahteraTheme {
-        DailyReportScreen(onNavigateBack = {}, onNavigateNext = {})
+        DailyReportScreen(
+            onNavigateBack = {},
+            onNavigateNext = { _, _, _ -> }
+        )
     }
 }

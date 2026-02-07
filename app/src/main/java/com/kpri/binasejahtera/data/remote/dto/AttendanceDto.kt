@@ -4,30 +4,31 @@ import com.google.gson.annotations.SerializedName
 
 
 // --- Home & Info ---
-// response GET /employee/home
-data class HomeDataResponse(
-    @SerializedName("shift_name")
-    val shiftName: String?,
+// GET employee/attendance
+data class AttendanceStatusResponse(
+    @SerializedName("jam_masuk")
+    val jamMasuk: String?,
 
-    @SerializedName("start_time")
-    val startTime: String?,
+    @SerializedName("sudah_masuk")
+    val sudahMasuk: Boolean,
 
-    @SerializedName("end_time")
-    val endTime: String?,
+    @SerializedName("jam_pulang")
+    val jamPulang: String?,
 
-    @SerializedName("today_attendance")
-    val todaylog: TodayAttendanceDto?
+    @SerializedName("sudah_pulang")
+    val sudahPulang: Boolean,
+
+    @SerializedName("total_work_hours")
+    val totalWorkHours: Int?,
+
+    @SerializedName("total_work_minutes")
+    val totalWorkMinutes: Int?,
+
+    @SerializedName("work_duration_text")
+    val workDurationText: String?
 )
 
-data class TodayAttendanceDto(
-    @SerializedName("in_time")
-    val inTime: String?,
-
-    @SerializedName("out_time")
-    val outTime: String?,
-)
-
-// response GET /office
+// GET employee/presence-location
 data class OfficeResponse(
     @SerializedName("name")
     val name: String,
@@ -36,39 +37,29 @@ data class OfficeResponse(
     val address: String,
 
     @SerializedName("latitude")
-    val latitude: Double,
+    val latitude: String,
 
     @SerializedName("longitude")
-    val longitude: Double,
+    val longitude: String,
 
-    @SerializedName("radius")
-    val radiusMeter: Double
+    @SerializedName("max_distance")
+    val maxDistance: Int,
+
+    @SerializedName("maps")
+    val mapsUrl: String?
 )
 
 // --- Check In & Out ---
-// request POST /employee/attendance/check-in
-data class CheckInRequest(
+
+/*
+POST /employee/attendance/check-in
+POST /employee/attendance/check-out
+*/
+
+data class AttendanceRequest(
     @SerializedName("latitude")
     val latitude: Double,
 
     @SerializedName("longitude")
-    val longitude: Double,
-
-    @SerializedName("address")
-    val address: String,
-
-    @SerializedName("status")
-    val status: String = "Hadir"
-)
-
-// request POST /employee/attendance/check-out
-data class CheckOutRequest(
-    @SerializedName("latitude")
-    val latitude: Double,
-
-    @SerializedName("longitude")
-    val longitude: Double,
-
-    @SerializedName("address")
-    val address: String
+    val longitude: Double
 )

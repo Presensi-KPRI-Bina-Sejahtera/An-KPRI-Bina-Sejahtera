@@ -19,8 +19,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.R
-import com.kpri.binasejahtera.ui.theme.*
+import com.kpri.binasejahtera.ui.theme.ErrorRed
+import com.kpri.binasejahtera.ui.theme.InfoGreen
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.Shapes
+import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun KpriDialog(

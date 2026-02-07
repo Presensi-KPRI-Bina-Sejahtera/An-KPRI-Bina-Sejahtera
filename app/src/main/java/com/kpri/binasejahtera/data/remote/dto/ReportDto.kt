@@ -5,10 +5,10 @@ import com.google.gson.annotations.SerializedName
 // --- Cashflow ---
 data class CashflowRequest(
     @SerializedName("pemasukan")
-    val income: Long,
+    val pemasukan: Long,
 
     @SerializedName("pengeluaran")
-    val expense: Long
+    val pengeluaran: Long
 )
 
 // --- Deposit ---

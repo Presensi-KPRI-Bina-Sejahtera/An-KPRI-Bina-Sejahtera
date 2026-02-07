@@ -17,14 +17,14 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // pake URL API yg asli biar bisa diakses (bagian akhir kasih "/")
+    // pastikan URL diakhiri dengan "/" (soalnya tadi bingung kenapa kok g bisa)
     private const val BASE_URL = "https://be-presensi-beta.trisuladana.com/api/"
 
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY // untuk debugging, nge-print request/response di Logcat
+            level = HttpLoggingInterceptor.Level.BODY
         }
     }
 

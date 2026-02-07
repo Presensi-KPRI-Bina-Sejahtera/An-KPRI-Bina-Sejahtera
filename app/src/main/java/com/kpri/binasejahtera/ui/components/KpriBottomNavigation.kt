@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,7 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
-import com.kpri.binasejahtera.ui.theme.*
+import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.Shapes
+import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun KpriBottomNavigation(
@@ -56,6 +59,7 @@ fun KpriBottomNavigation(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .height(96.dp)
     ) {
         // bar menu navigasi

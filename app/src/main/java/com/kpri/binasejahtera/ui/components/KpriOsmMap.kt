@@ -5,17 +5,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import com.kpri.binasejahtera.R
+import com.kpri.binasejahtera.ui.theme.InfoGreen
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
-import androidx.compose.ui.graphics.toArgb
-import androidx.core.content.ContextCompat
-import com.kpri.binasejahtera.R
-import com.kpri.binasejahtera.ui.theme.*
 
 @Composable
 fun KpriOsmMap(
