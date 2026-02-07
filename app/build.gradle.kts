@@ -79,8 +79,11 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
 
-    // location & maps
-    implementation(libs.maps.compose)
-    implementation(libs.play.services.maps)
+    // location & maps (openstreetmap)
     implementation(libs.play.services.location)
+    implementation(libs.osmdroid.android)
+
+    // datastore & preferences manager (local storage)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.preference.ktx)
 }

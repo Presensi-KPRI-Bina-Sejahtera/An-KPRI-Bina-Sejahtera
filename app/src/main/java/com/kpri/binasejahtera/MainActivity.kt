@@ -10,10 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.kpri.binasejahtera.ui.screens.LoginScreen
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import org.osmdroid.config.Configuration
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // OSMDroid config
+        val ctx = applicationContext
+        Configuration.getInstance().load(ctx, androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx))
+        Configuration.getInstance().userAgentValue = packageName
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(
