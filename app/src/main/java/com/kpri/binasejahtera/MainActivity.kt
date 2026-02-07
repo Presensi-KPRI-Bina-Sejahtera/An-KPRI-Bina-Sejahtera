@@ -10,8 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.kpri.binasejahtera.ui.screens.LoginScreen
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import dagger.hilt.android.AndroidEntryPoint
 import org.osmdroid.config.Configuration
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
