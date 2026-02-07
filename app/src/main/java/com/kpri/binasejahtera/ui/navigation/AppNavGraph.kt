@@ -134,39 +134,19 @@ fun AppNavGraph(
         ) { backStackEntry ->
             val isCheckIn = backStackEntry.arguments?.getBoolean("status") ?: true
             val viewModel: AttendanceViewModel = hiltViewModel()
+            val confirmState by viewModel.confirmationState.collectAsState()
 
-            // Setup data dummy sementara agar tidak error saat render
-            // Nanti ini diganti dengan data Live dari ViewModel
-            val dummyState = com.kpri.binasejahtera.ui.screens.PresenceLocationState(
-                time = "00:00:00", date = "-", locationName = "Memuat...",
-                address = "-", radius = "0m", distance = "0m", isDistanceSafe = false
-            )
-
-            LaunchedEffect(true) {
-                viewModel.attendanceEvent.collect { event ->
-                    when (event) {
-                        is AttendanceViewModel.AttendanceEvent.Success -> {
-                            ToastManager.show(event.message, ToastType.SUCCESS)
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Home.route) { inclusive = true }
-                            }
-                        }
-                        is AttendanceViewModel.AttendanceEvent.Error -> {
-                            ToastManager.show(event.message, ToastType.ERROR)
-                        }
-                    }
-                }
+            LaunchedEffect(Unit) {
+                viewModel.initPresenceConfirmation()
             }
 
             PresenceConfirmationScreen(
                 isCheckIn = isCheckIn,
-                state = dummyState, // TODO: Bind ke viewModel.state
+                state = confirmState,
                 onBackClick = { navController.popBackStack() },
                 onConfirmClick = {
-                    // Panggil API CheckIn / CheckOut
-                    // Dummy LatLong sementara
-                    if (isCheckIn) viewModel.checkIn(-6.2, 106.8)
-                    else viewModel.checkOut(-6.2, 106.8)
+                    if (isCheckIn) viewModel.checkInReal()
+                    else viewModel.checkOutReal()
                 }
             )
         }

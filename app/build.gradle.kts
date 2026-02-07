@@ -63,6 +63,9 @@ dependencies {
     // navigation compose
     implementation(libs.androidx.navigation.compose)
 
+    // coroutines
+    implementation(libs.kotlinx.coroutines.play.services)
+
     // hilt (dependency injection)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

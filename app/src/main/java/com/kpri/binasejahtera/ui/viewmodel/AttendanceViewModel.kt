@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kpri.binasejahtera.data.repository.AttendanceRepository
 import com.kpri.binasejahtera.data.repository.ProfileRepository
+import com.kpri.binasejahtera.utils.LocationHelper
 import com.kpri.binasejahtera.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -19,6 +20,7 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
+// home/dashboard
 data class HomeUiState(
     val userName: String = "Memuat...",
     val userPhoto: String? = null,
@@ -32,20 +34,39 @@ data class HomeUiState(
     val isCheckOut: Boolean = false
 )
 
+// konfirmasi presensi
+data class ConfirmationUiState(
+    val userLat: Double = 0.0,
+    val userLong: Double = 0.0,
+    val officeLat: Double = 0.0,
+    val officeLong: Double = 0.0,
+    val officeName: String = "Memuat...",
+    val officeAddress: String = "...",
+    val maxRadius: Double = 50.0, // max radius 50m
+    val currentDistance: Double = 0.0,
+    val isSafe: Boolean = false,
+    val isLoadingLocation: Boolean = true,
+    val error: String? = null
+)
+
 @HiltViewModel
 class AttendanceViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val locationHelper: LocationHelper
 ) : ViewModel() {
-
-    private val _homeState = MutableStateFlow(HomeUiState())
-    val homeState = _homeState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    private val _homeState = MutableStateFlow(HomeUiState())
+    val homeState = _homeState.asStateFlow()
+
     private val _attendanceEvent = Channel<AttendanceEvent>()
     val attendanceEvent = _attendanceEvent.receiveAsFlow()
+
+    private val _confirmationState = MutableStateFlow(ConfirmationUiState())
+    val confirmationState = _confirmationState.asStateFlow()
 
     private var durationJob: Job? = null
 
@@ -150,6 +171,82 @@ class AttendanceViewModel @Inject constructor(
                 delay(60000)
             }
         }
+    }
+
+    fun initPresenceConfirmation() {
+        viewModelScope.launch {
+            _confirmationState.value = _confirmationState.value.copy(isLoadingLocation = true)
+
+            // data kantor dari api
+            attendanceRepository.getOfficeLocation().collect { result ->
+                if (result is Resource.Success) {
+                    val office = result.data!!
+                    val offLat = office.latitude.toDoubleOrNull() ?: 0.0
+                    val offLong = office.longitude.toDoubleOrNull() ?: 0.0
+
+                    _confirmationState.value = _confirmationState.value.copy(
+                        officeLat = offLat,
+                        officeLong = offLong,
+                        officeName = office.name,
+                        officeAddress = office.address,
+                        maxRadius = office.maxDistance.toDouble()
+                    )
+
+                    // lokasi hp user
+                    getUserLocation()
+                } else if (result is Resource.Error) {
+                    _confirmationState.value = _confirmationState.value.copy(
+                        isLoadingLocation = false,
+                        error = "Gagal memuat lokasi kantor"
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun getUserLocation() {
+        val location = locationHelper.getCurrentLocation()
+        if (location != null) {
+            val userLat = location.latitude
+            val userLong = location.longitude
+
+            // hitung jarak dari user ke kantor
+            val officeLat = _confirmationState.value.officeLat
+            val officeLong = _confirmationState.value.officeLong
+            val radius = _confirmationState.value.maxRadius
+
+            val distance = locationHelper.calculateDistance(
+                userLat, userLong, officeLat, officeLong
+            )
+
+            val isSafe = distance <= radius
+
+            _confirmationState.value = _confirmationState.value.copy(
+                userLat = userLat,
+                userLong = userLong,
+                currentDistance = distance.toDouble(),
+                isSafe = isSafe,
+                isLoadingLocation = false
+            )
+        } else {
+            _confirmationState.value = _confirmationState.value.copy(
+                isLoadingLocation = false,
+                error = "Gagal mendapatkan lokasi GPS. Pastikan GPS aktif."
+            )
+        }
+    }
+
+    // fun baru yg manggil fun lama
+    fun checkInReal() {
+        val lat = _confirmationState.value.userLat
+        val long = _confirmationState.value.userLong
+        checkIn(lat, long)
+    }
+
+    fun checkOutReal() {
+        val lat = _confirmationState.value.userLat
+        val long = _confirmationState.value.userLong
+        checkOut(lat, long)
     }
 
     fun checkIn(lat: Double, long: Double) {
