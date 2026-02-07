@@ -144,7 +144,8 @@ fun HomeContent(
                         ) {
                             TimeColumn(
                                 label = "Masuk",
-                                time = state.checkInTime
+                                time = state.checkInTime,
+                                isPlaceholder = state.checkOutTime == "--:--:--"
                             )
 
                             VerticalDivider(

@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.R
+import com.kpri.binasejahtera.data.remote.dto.DepositItemDto
 import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
 import com.kpri.binasejahtera.ui.components.KpriTextField
 import com.kpri.binasejahtera.ui.components.KpriTopBar
@@ -66,7 +67,7 @@ data class DepositUiState(
 @Composable
 fun DailyReportScreen(
     onNavigateBack: () -> Unit,
-    onNavigateNext: () -> Unit
+    onNavigateNext: (pemasukan: String, pengeluaran: String, deposits: List<DepositItemDto>) -> Unit
 ) {
     var pemasukan by remember { mutableStateOf("") }
     var pengeluaran by remember { mutableStateOf("") }
@@ -149,7 +150,7 @@ fun DailyReportScreen(
 
                 DepositCard(
                     state = deposit,
-                    isExtraCard = index > 0, // Card pertama tidak ada tombol hapus
+                    isExtraCard = index > 0,
                     onRemove = { depositList.removeAt(index) },
                     onNameChange = { deposit.name = it },
                     onAmountChange = { deposit.amount = it },
@@ -176,8 +177,21 @@ fun DailyReportScreen(
             // tombol lanjut
             KpriPrimaryButton(
                 text = "Lanjut ke Presensi Pulang",
-                iconId = R.drawable.ic_arrow_right,
-                onClick = onNavigateNext,
+                iconId = R.drawable.ic_arrow_go,
+                onClick = {
+                    val dtoList = depositList.map { item ->
+                        DepositItemDto(
+                            memberName = item.name,
+                            type = if (item.isSimpanan) "Simpanan" else "Angsuran",
+                            amount = item.amount
+                                .replace(Regex("[^0-9]"), "")
+                                .toLongOrNull() ?: 0L
+                        )
+                    }
+
+                    onNavigateNext(pemasukan, pengeluaran, dtoList)
+
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -364,6 +378,9 @@ fun TypeButton(
 @Composable
 fun DailyReportPreview() {
     KPRIBinaSejahteraTheme {
-        DailyReportScreen(onNavigateBack = {}, onNavigateNext = {})
+        DailyReportScreen(
+            onNavigateBack = {},
+            onNavigateNext = { _, _, _ -> }
+        )
     }
 }

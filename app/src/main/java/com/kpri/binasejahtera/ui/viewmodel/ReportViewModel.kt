@@ -27,23 +27,29 @@ class ReportViewModel @Inject constructor(
     val reportEvent = _reportEvent.receiveAsFlow()
 
     fun submitReport(
-        income: String,
-        expense: String,
+        pemasukan: String,
+        pengeluaran: String,
         deposits: List<DepositItemDto>
     ) {
         viewModelScope.launch {
             _isLoading.value = true
 
             // hapus karakter non-digit biar aman saat parsing
-            val cleanIncome = income.replace(Regex("[^0-9]"), "")
-            val cleanExpense = expense.replace(Regex("[^0-9]"), "")
+            val cleanPemasukan = pemasukan.replace(Regex("[^0-9]"), "")
+            val cleanPengeluaran = pengeluaran.replace(Regex("[^0-9]"), "")
 
-            // kirim pemasukan cashflow
-            val incomeLong = income.toLongOrNull() ?: 0L
-            val expenseLong = expense.toLongOrNull() ?: 0L
+            // parse dari var yg sudah clean
+            val pemasukanLong = cleanPemasukan.toLongOrNull() ?: 0L
+            val pengeluaranLong = cleanPengeluaran.toLongOrNull() ?: 0L
 
             var isCashflowError = false
-            repository.sendCashflow(CashflowRequest(incomeLong, expenseLong)).collect { cashResult ->
+
+            val request = CashflowRequest(
+                pemasukan = pemasukanLong,
+                pengeluaran = pengeluaranLong
+            )
+
+            repository.sendCashflow(request).collect { cashResult ->
                 if (cashResult is Resource.Error) {
                     _isLoading.value = false
                     _reportEvent.send(ReportEvent.Error("Gagal kirim keuangan: ${cashResult.message}"))

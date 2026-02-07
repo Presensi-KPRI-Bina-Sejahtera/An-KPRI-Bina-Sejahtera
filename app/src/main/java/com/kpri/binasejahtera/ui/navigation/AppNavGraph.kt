@@ -4,14 +4,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
+import com.kpri.binasejahtera.ui.components.KpriDialog
+import com.kpri.binasejahtera.ui.theme.InfoGreen
 import com.kpri.binasejahtera.ui.screens.ChangePasswordScreen
 import com.kpri.binasejahtera.ui.screens.DailyReportScreen
 import com.kpri.binasejahtera.ui.screens.EditProfileScreen
@@ -24,6 +30,7 @@ import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 import com.kpri.binasejahtera.ui.viewmodel.AuthViewModel
 import com.kpri.binasejahtera.ui.viewmodel.ProfileViewModel
 import com.kpri.binasejahtera.ui.viewmodel.ReportViewModel
+
 
 @Composable
 fun AppNavGraph(
@@ -119,10 +126,12 @@ fun AppNavGraph(
 
             DailyReportScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateNext = {
-                    // Sementara hardcode dummy submit biar bisa navigasi
-                    // Nanti ambil value asli dari Screen State
-                    viewModel.submitReport("0", "0", emptyList())
+                onNavigateNext = { pemasukan, pengeluaran, deposits ->
+                    viewModel.submitReport(
+                        pemasukan = pemasukan,
+                        pengeluaran = pengeluaran,
+                        deposits = deposits
+                    )
                 }
             )
         }
@@ -136,8 +145,41 @@ fun AppNavGraph(
             val viewModel: AttendanceViewModel = hiltViewModel()
             val confirmState by viewModel.confirmationState.collectAsState()
 
+            // state untuk nyimpen pesan sukses
+            var successDialogMessage by remember { mutableStateOf<String?>(null) }
+
             LaunchedEffect(Unit) {
                 viewModel.initPresenceConfirmation()
+            }
+
+            LaunchedEffect(true) {
+                viewModel.attendanceEvent.collect { event ->
+                    when (event) {
+                        is AttendanceViewModel.AttendanceEvent.Success -> {
+                            successDialogMessage = event.message
+                        }
+                        is AttendanceViewModel.AttendanceEvent.Error -> {
+                            ToastManager.show(event.message, ToastType.ERROR)
+                        }
+                    }
+                }
+            }
+
+            // dialog muncul pas ada pesannya
+            if (successDialogMessage != null) {
+                KpriDialog(
+                    title = "Presensi Berhasil!",
+                    message = successDialogMessage ?: "",
+                    confirmText = "Kembali ke Beranda",
+                    iconId = R.drawable.ic_check,
+                    iconContainerColor = InfoGreen,
+                    onConfirm = {
+                        successDialogMessage = null
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             PresenceConfirmationScreen(
