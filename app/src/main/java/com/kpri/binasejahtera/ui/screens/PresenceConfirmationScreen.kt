@@ -39,7 +39,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
-import com.kpri.binasejahtera.ui.theme.*
+import com.kpri.binasejahtera.ui.theme.AppBackground
+import com.kpri.binasejahtera.ui.theme.ErrorContainer
+import com.kpri.binasejahtera.ui.theme.ErrorRed
+import com.kpri.binasejahtera.ui.theme.InfoGreen
+import com.kpri.binasejahtera.ui.theme.InfoRed
+import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.Shapes
+import com.kpri.binasejahtera.ui.theme.SuccessContainer
+import com.kpri.binasejahtera.ui.theme.SuccessGreen
+import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 data class PresenceLocationState(
     val time: String,

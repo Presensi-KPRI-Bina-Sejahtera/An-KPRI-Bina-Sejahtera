@@ -1,13 +1,18 @@
 package com.kpri.binasejahtera
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.kpri.binasejahtera.ui.components.KpriCustomToastHost
+import com.kpri.binasejahtera.ui.navigation.AppNavGraph
 import com.kpri.binasejahtera.ui.screens.LoginScreen
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,14 +41,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             KPRIBinaSejahteraTheme {
-                LoginScreen(
-                    onLoginClick = { email, password ->
-                        Toast.makeText(this, "Login: $email, Password $password", Toast.LENGTH_SHORT).show()
-                    },
-                    onGoogleSignInClick = {
-                        Toast.makeText(this, "Google Login Clicked", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                val navController = rememberNavController()
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AppNavGraph(navController = navController)
+
+                    // custom toast dari atas
+                    KpriCustomToastHost()
+                }
             }
         }
     }

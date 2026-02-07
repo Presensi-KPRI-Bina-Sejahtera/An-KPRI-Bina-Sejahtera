@@ -47,7 +47,12 @@ import com.kpri.binasejahtera.ui.components.KpriTextField
 import com.kpri.binasejahtera.ui.components.KpriTopBar
 import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.theme.AppBackground
-import com.kpri.binasejahtera.ui.theme.*
+import com.kpri.binasejahtera.ui.theme.ErrorRed
+import com.kpri.binasejahtera.ui.theme.InfoBlue
+import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
+import com.kpri.binasejahtera.ui.theme.Shapes
+import com.kpri.binasejahtera.ui.theme.SuccessGreen
+import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun DailyReportScreen(

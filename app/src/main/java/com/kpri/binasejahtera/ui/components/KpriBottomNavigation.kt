@@ -33,7 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
-import com.kpri.binasejahtera.ui.theme.*
+import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.theme.Shapes
+import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun KpriBottomNavigation(

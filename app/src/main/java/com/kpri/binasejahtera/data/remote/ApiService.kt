@@ -1,9 +1,25 @@
 package com.kpri.binasejahtera.data.remote
 
-import com.kpri.binasejahtera.data.remote.dto.*
+import com.kpri.binasejahtera.data.remote.dto.BaseResponse
+import com.kpri.binasejahtera.data.remote.dto.CashflowRequest
+import com.kpri.binasejahtera.data.remote.dto.ChangePasswordRequest
+import com.kpri.binasejahtera.data.remote.dto.CheckInRequest
+import com.kpri.binasejahtera.data.remote.dto.CheckOutRequest
+import com.kpri.binasejahtera.data.remote.dto.DepositRequest
+import com.kpri.binasejahtera.data.remote.dto.GoogleLoginRequest
+import com.kpri.binasejahtera.data.remote.dto.HomeDataResponse
+import com.kpri.binasejahtera.data.remote.dto.LoginRequest
+import com.kpri.binasejahtera.data.remote.dto.LoginResponse
+import com.kpri.binasejahtera.data.remote.dto.OfficeResponse
+import com.kpri.binasejahtera.data.remote.dto.ProfileResponse
+import com.kpri.binasejahtera.data.remote.dto.UpdateProfileRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.Part
 
 interface ApiService {
     // --- Auth ---
