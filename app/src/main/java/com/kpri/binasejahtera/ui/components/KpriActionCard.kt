@@ -106,7 +106,10 @@ fun KpriActionCard(
     }
 }
 
-@Preview(name = "1. Normal Menu", showBackground = true)
+@Preview(
+    name = "1. Normal Menu",
+    showBackground = true
+)
 @Composable
 fun KpriActionCardPreview() {
     KPRIBinaSejahteraTheme {
@@ -121,7 +124,10 @@ fun KpriActionCardPreview() {
     }
 }
 
-@Preview(name = "2. Logout Button", showBackground = true)
+@Preview(
+    name = "2. Logout Button",
+    showBackground = true
+)
 @Composable
 fun KpriActionCardDestructivePreview() {
     KPRIBinaSejahteraTheme {

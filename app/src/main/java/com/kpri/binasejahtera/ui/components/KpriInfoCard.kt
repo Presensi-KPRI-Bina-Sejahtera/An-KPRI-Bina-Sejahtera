@@ -98,7 +98,10 @@ fun KpriInfoCard(
     }
 }
 
-@Preview(name = "1. Static Info (Lokasi)", showBackground = true)
+@Preview(
+    name = "1. Static Info (Lokasi)",
+    showBackground = true
+)
 @Composable
 fun InfoCardStaticPreview() {
     KPRIBinaSejahteraTheme {
@@ -110,7 +113,10 @@ fun InfoCardStaticPreview() {
     }
 }
 
-@Preview(name = "2. Action Info (Berangkat)", showBackground = true)
+@Preview(
+    name = "2. Action Info (Berangkat)",
+    showBackground = true
+)
 @Composable
 fun InfoCardActionPreview() {
     KPRIBinaSejahteraTheme {

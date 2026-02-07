@@ -107,7 +107,10 @@ fun KpriDialog(
 }
 
 // preview success
-@Preview(name = "1. Success Dialog", showBackground = true)
+@Preview(
+    name = "1. Success Dialog",
+    showBackground = true
+)
 @Composable
 fun KpriDialogPreview() {
     KPRIBinaSejahteraTheme {
@@ -122,7 +125,10 @@ fun KpriDialogPreview() {
 }
 
 // preview warning
-@Preview(name = "2. Warning Confirmation", showBackground = true)
+@Preview(
+    name = "2. Warning Confirmation",
+    showBackground = true
+)
 @Composable
 fun KpriWarningDialogPreview() {
     KPRIBinaSejahteraTheme {
