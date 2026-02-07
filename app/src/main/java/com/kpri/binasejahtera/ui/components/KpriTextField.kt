@@ -142,7 +142,10 @@ fun KpriTextField(
     }
 }
 
-@Preview(name = "1. Default", showBackground = true)
+@Preview(
+    name = "1. Default",
+    showBackground = true
+)
 @Composable
 fun KpriTextFieldDefaultPreview() {
     KPRIBinaSejahteraTheme {
@@ -158,7 +161,10 @@ fun KpriTextFieldDefaultPreview() {
     }
 }
 
-@Preview(name = "2. Password Input (Closed)", showBackground = true)
+@Preview(
+    name = "2. Password Input (Closed)",
+    showBackground = true
+)
 @Composable
 fun KpriTextFieldPasswordClosedPreview() {
     KPRIBinaSejahteraTheme {
@@ -175,7 +181,11 @@ fun KpriTextFieldPasswordClosedPreview() {
     }
 }
 
-@Preview(name = "3. Card Style", showBackground = true, backgroundColor = 0xFFEEEEEE)
+@Preview(
+    name = "3. Card Style",
+    showBackground = true,
+    backgroundColor = 0xFFEEEEEE
+)
 @Composable
 fun KpriTextFieldShadowPreview() {
     KPRIBinaSejahteraTheme {

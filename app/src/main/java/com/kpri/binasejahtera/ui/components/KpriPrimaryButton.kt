@@ -101,7 +101,10 @@ fun KpriPrimaryButton(
     }
 }
 
-@Preview(name = "1. Solid Button (Enabled)", showBackground = true)
+@Preview(
+    name = "1. Solid Button (Enabled)",
+    showBackground = true
+)
 @Composable
 fun PrimaryButtonSolidPreview() {
     KPRIBinaSejahteraTheme {
@@ -115,7 +118,10 @@ fun PrimaryButtonSolidPreview() {
     }
 }
 
-@Preview(name = "2. Outlined Button (Tambah)", showBackground = true)
+@Preview(
+    name = "2. Outlined Button (Tambah)",
+    showBackground = true
+)
 @Composable
 fun PrimaryButtonOutlinedPreview() {
     KPRIBinaSejahteraTheme {
@@ -133,7 +139,10 @@ fun PrimaryButtonOutlinedPreview() {
     }
 }
 
-@Preview(name = "3. Disabled State (Greyed Out)", showBackground = true)
+@Preview(
+    name = "3. Disabled State (Greyed Out)",
+    showBackground = true
+)
 @Composable
 fun PrimaryButtonDisabledPreview() {
     KPRIBinaSejahteraTheme {

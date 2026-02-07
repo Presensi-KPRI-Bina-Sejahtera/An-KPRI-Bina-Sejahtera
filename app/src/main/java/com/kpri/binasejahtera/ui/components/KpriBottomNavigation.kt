@@ -196,7 +196,10 @@ fun KpriNavItem(
     }
 }
 
-@Preview(name = "1. Home", showBackground = true)
+@Preview(
+    name = "1. Home",
+    showBackground = true
+)
 @Composable
 fun KpriBottomNavHomePreview() {
     KPRIBinaSejahteraTheme {
@@ -204,7 +207,10 @@ fun KpriBottomNavHomePreview() {
     }
 }
 
-@Preview(name = "2. Profile", showBackground = true)
+@Preview(
+    name = "2. Profile",
+    showBackground = true
+)
 @Composable
 fun KpriBottomNavProfilePreview() {
     KPRIBinaSejahteraTheme {
@@ -212,7 +218,10 @@ fun KpriBottomNavProfilePreview() {
     }
 }
 
-@Preview(name = "3. Presence", showBackground = true)
+@Preview(
+    name = "3. Presence",
+    showBackground = true
+)
 @Composable
 fun KpriBottomNavPresencePreview() {
     KPRIBinaSejahteraTheme {

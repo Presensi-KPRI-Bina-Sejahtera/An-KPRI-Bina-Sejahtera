@@ -259,7 +259,10 @@ fun TopBarNavDescPreview() {
     }
 }
 
-@Preview(name = "3. Profile Mode", showBackground = true)
+@Preview(
+    name = "3. Profile Mode",
+    showBackground = true
+)
 @Composable
 fun TopBarProfilePreview() {
     KPRIBinaSejahteraTheme {
@@ -273,7 +276,10 @@ fun TopBarProfilePreview() {
     }
 }
 
-@Preview(name = "4. Nav Title Only (Change Pass)", showBackground = true)
+@Preview(
+    name = "4. Nav Title Only (Change Pass)",
+    showBackground = true
+)
 @Composable
 fun TopBarNavSimplePreview() {
     KPRIBinaSejahteraTheme {

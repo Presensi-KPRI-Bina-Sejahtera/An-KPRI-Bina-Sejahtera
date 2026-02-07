@@ -86,7 +86,9 @@ fun KpriPresenceTile(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true
+)
 @Composable
 fun KpriPresenceTilePreview() {
     KPRIBinaSejahteraTheme {
