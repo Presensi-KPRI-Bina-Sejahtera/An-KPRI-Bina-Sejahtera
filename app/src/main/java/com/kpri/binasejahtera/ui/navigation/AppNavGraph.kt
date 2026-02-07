@@ -177,9 +177,13 @@ fun AppNavGraph(
 
             LaunchedEffect(true) {
                 viewModel.authEvent.collect { event ->
-                    if (event is AuthViewModel.AuthEvent.Success && event.message.contains("Logout")) {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
+                    if (event is AuthViewModel.AuthEvent.Success) {
+                        if (event.message.contains("Logout", ignoreCase = true) || event.message.contains("Keluar", ignoreCase = true)) {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        } else {
+                            ToastManager.show("Gagal Trigger: Pesannya '${event.message}'", ToastType.ERROR)
                         }
                     }
                 }
@@ -188,11 +192,14 @@ fun AppNavGraph(
             ProfileScreen(
                 onNavigate = { route ->
                     when (route) {
-                        "login" -> viewModel.logout()
                         "personal_info" -> navController.navigate(Screen.EditProfile.route)
                         "change_password" -> navController.navigate(Screen.ChangePassword.route)
                         else -> navController.navigate(route)
                     }
+                },
+
+                onLogout = {
+                    viewModel.logout()
                 }
             )
         }

@@ -27,7 +27,8 @@ import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun ProfileScreen(
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -88,7 +89,7 @@ fun ProfileScreen(
                 title = "Logout",
                 iconId = R.drawable.ic_out,
                 isDestructive = true,
-                onClick = { onNavigate("login") }
+                onClick = onLogout
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -113,6 +114,9 @@ fun ProfileScreen(
 @Composable
 fun ProfileScreenPreview() {
     KPRIBinaSejahteraTheme {
-        ProfileScreen(onNavigate = {})
+        ProfileScreen(
+            onNavigate = {},
+            onLogout = {}
+        )
     }
 }
