@@ -2,7 +2,7 @@ package com.kpri.binasejahtera.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-// response GET /employee/profile
+// GET /profile/me
 data class ProfileResponse(
     @SerializedName("id")
     val id: Int,
@@ -10,23 +10,23 @@ data class ProfileResponse(
     @SerializedName("name")
     val name: String,
 
+    @SerializedName("username")
+    val username: String,
+
     @SerializedName("email")
     val email: String,
 
-    @SerializedName("phone_number")
-    val phoneNumber: String?,
-
-    @SerializedName("profile_photo_url")
-    val photoUrl: String?,
-
-    @SerializedName("position")
+    @SerializedName("role")
     val role: String,
 
-    @SerializedName("shift_name")
-    val shiftName: String?
+    @SerializedName("profile_image")
+    val profileImage: String?,
+
+    @SerializedName("has_password")
+    val hasPassword: Boolean
 )
 
-// request POST /employee/profile/update
+// PUT /profile/update
 data class UpdateProfileRequest(
     @SerializedName("name")
     val name: String,
@@ -34,6 +34,6 @@ data class UpdateProfileRequest(
     @SerializedName("email")
     val email: String,
 
-    @SerializedName("phone_number")
-    val phoneNumber: String
+    @SerializedName("username")
+    val username: String
 )

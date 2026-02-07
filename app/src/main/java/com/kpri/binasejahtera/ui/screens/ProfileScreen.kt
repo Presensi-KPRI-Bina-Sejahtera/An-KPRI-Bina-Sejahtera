@@ -36,7 +36,7 @@ fun ProfileScreen(
                 config = TopBarConfig.Profile(
                     name = "Endra Zhafir",
                     username = "endra_zhafir",
-                    userPhotoId = R.drawable.profilepicture
+                    userPhotoUrl = null
                 )
             )
         },
@@ -91,8 +91,6 @@ fun ProfileScreen(
                 isDestructive = true,
                 onClick = onLogout
             )
-
-            Spacer(modifier = Modifier.weight(1f))
 
             // versi app
             Spacer(modifier = Modifier.height(40.dp))

@@ -24,6 +24,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriInfoCard
@@ -46,10 +49,25 @@ import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.SuccessGreen
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
-
+import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
+import com.kpri.binasejahtera.ui.viewmodel.HomeUiState
 
 @Composable
 fun HomeScreen(
+    onNavigate: (String) -> Unit
+) {
+    val viewModel: AttendanceViewModel = hiltViewModel()
+    val state by viewModel.homeState.collectAsState()
+
+    HomeContent(
+        state = state,
+        onNavigate = onNavigate
+    )
+}
+
+@Composable
+fun HomeContent(
+    state: HomeUiState,
     onNavigate: (String) -> Unit
 ) {
     Scaffold(
@@ -57,12 +75,11 @@ fun HomeScreen(
             KpriTopBar(
                 config = TopBarConfig.Home(
                     greeting = "Selamat Datang,",
-                    name = "Endra Zhafir",
-                    userPhotoId = R.drawable.profilepicture
+                    name = state.userName,
+                    userPhotoUrl = state.userPhoto
                 ),
             )
         },
-
         bottomBar = {
             KpriBottomNavigation(
                 currentRoute = "home",
@@ -72,78 +89,54 @@ fun HomeScreen(
                     .padding(bottom = 24.dp)
             )
         },
-
         containerColor = AppBackground
 
-    ) {
-        innerPadding ->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding())
                 .verticalScroll(rememberScrollState())
         ) {
-            // content (tanggal, durasi shift, tombol masuk/pulang, lokasi, & maps)
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                // tanggal & shift
+            Column(modifier = Modifier.padding(16.dp)) {
+                // tanggal
                 Card(
                     shape = Shapes.medium,
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(
-                            elevation = 12.dp,
-                            Shapes.medium,
-                            spotColor = Color.Black.copy(0.5f)
-                        )
+                        .shadow(12.dp, Shapes.medium, spotColor = Color.Black.copy(0.5f))
                 ) {
                     Row(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_calendar),
-                                contentDescription = null,
-                                tint = PrimaryBlack,
-                                modifier = Modifier.size(16.dp)
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Text(
-                                text = "Jumat, 03 Februari 2026",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TertiaryGray
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_calendar),
+                            contentDescription = null,
+                            tint = PrimaryBlack,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = state.currentDate,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TertiaryGray
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // work shift card
+                // shift & waktu
                 Card(
                     shape = Shapes.medium,
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(
-                            elevation = 12.dp,
-                            Shapes.medium,
-                            spotColor = Color.Black.copy(0.5f)
-                        )
+                        .shadow(12.dp, Shapes.medium, spotColor = Color.Black.copy(0.5f))
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp)
-                    ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround,
@@ -151,26 +144,24 @@ fun HomeScreen(
                         ) {
                             TimeColumn(
                                 label = "Masuk",
-                                time = "07:45:00"
+                                time = state.checkInTime
                             )
 
                             VerticalDivider(
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .width(1.dp),
+                                modifier = Modifier.height(40.dp).width(1.dp),
                                 color = TertiaryGray.copy(alpha = 0.3f)
                             )
 
                             TimeColumn(
                                 label = "Jam Pulang",
-                                time = "--:--:--",
-                                isPlaceholder = true
+                                time = state.checkOutTime,
+                                isPlaceholder = state.checkOutTime == "--:--:--"
                             )
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // box durasi kerja
+                        // durasi kerja
                         Surface(
                             color = TertiaryGray.copy(alpha = 0.05f),
                             shape = Shapes.medium,
@@ -186,23 +177,17 @@ fun HomeScreen(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = TertiaryGray
                                 )
-
                                 Spacer(modifier = Modifier.padding(4.dp))
-
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_clock),
                                         contentDescription = null,
                                         tint = InfoBlue,
                                         modifier = Modifier.size(16.dp)
                                     )
-
                                     Spacer(modifier = Modifier.width(4.dp))
-
                                     Text(
-                                        text = "0 jam 00 menit",
+                                        text = state.workDuration,
                                         style = MaterialTheme.typography.labelMedium,
                                         color = InfoBlue
                                     )
@@ -214,12 +199,11 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // tombol presensi
+                // tombol presensi (quick action button)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // tombol masuk
                     DashboardActionCard(
                         title = "Presensi Masuk",
                         subtitle = "Datang & mulai kerja",
@@ -229,7 +213,6 @@ fun HomeScreen(
                         onClick = { onNavigate("attendance_in") }
                     )
 
-                    // tombol pulang
                     DashboardActionCard(
                         title = "Presensi Pulang",
                         subtitle = "Laporan harian & pulang",
@@ -242,10 +225,10 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // location info & maps
+                // info lokasi
                 KpriInfoCard(
                     title = "Lokasi Anda",
-                    value = "Jl. Jendral Sudirman No. 1 Jakarta Pusat (Dalam Radius)",
+                    value = state.currentAddress,
                     iconId = R.drawable.ic_map
                 )
 
@@ -253,13 +236,12 @@ fun HomeScreen(
 
                 KpriInfoCard(
                     title = "Berangkat Ke Tempat Kerja",
-                    value = "Jl. Jendral Sudirman No. 1 Jakarta Pusat",
+                    value = state.officeAddress,
                     iconId = R.drawable.ic_nav_arrow,
                     onClick = {}
                 )
 
                 Spacer(modifier = Modifier.height(120.dp))
-
             }
         }
     }
@@ -360,6 +342,16 @@ private fun DashboardActionCard(
 @Composable
 fun HomeScreenPreview() {
     KPRIBinaSejahteraTheme {
-        HomeScreen(onNavigate = {})
+        HomeContent(
+            state = HomeUiState(
+                userName = "Endra Zhafir",
+                currentDate = "Sabtu, 08 Februari 2026",
+                checkInTime = "07:45:00",
+                workDuration = "4 jam 30 menit",
+                officeAddress = "Jl. Jendral Sudirman No. 1",
+                currentAddress = "Rumah"
+            ),
+            onNavigate = {}
+        )
     }
 }

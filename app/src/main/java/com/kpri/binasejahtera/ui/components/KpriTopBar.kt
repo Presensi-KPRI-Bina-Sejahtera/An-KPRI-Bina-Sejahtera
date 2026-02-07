@@ -1,7 +1,6 @@
 package com.kpri.binasejahtera.ui.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
@@ -41,7 +41,7 @@ sealed interface TopBarConfig {
     data class Home(
         val greeting: String,
         val name: String,
-        val userPhotoId: Int
+        val userPhotoUrl: String? = null
     ) : TopBarConfig
 
     // navigation bar (laporan, edit, change pass)
@@ -55,7 +55,7 @@ sealed interface TopBarConfig {
     data class Profile(
         val name: String,
         val username: String,
-        val userPhotoId: Int
+        val userPhotoUrl: String? = null
     ) : TopBarConfig
 }
 
@@ -103,12 +103,15 @@ private fun HomeTopBarContent(config: TopBarConfig.Home) {
         Surface(
             shape = CircleShape,
             shadowElevation = 16.dp,
-            modifier = Modifier.size(48.dp)
+            modifier = Modifier.size(48.dp),
+            color = PrimaryBlack // placeholder
         ) {
-            Image(
-                painter = painterResource(id = config.userPhotoId),
+            AsyncImage(
+                model = config.userPhotoUrl,
                 contentDescription = "Profile Picture",
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.profilepicture),
+                error = painterResource(id = R.drawable.profilepicture)
             )
         }
 
@@ -205,10 +208,12 @@ private fun ProfileTopBarContent(config: TopBarConfig.Profile) {
                 shadowElevation = 16.dp,
                 modifier = Modifier.size(80.dp)
             ) {
-                Image(
-                    painter = painterResource(id = config.userPhotoId),
+                AsyncImage(
+                    model = config.userPhotoUrl,
                     contentDescription = "Profile Picture",
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profilepicture),
+                    error = painterResource(id = R.drawable.profilepicture)
                 )
             }
 
@@ -239,7 +244,7 @@ fun TopBarHomePreview() {
             config = TopBarConfig.Home(
                 greeting = "Selamat datang,",
                 name = "Endra Zhafir",
-                userPhotoId = R.drawable.profilepicture
+                userPhotoUrl = null // klo blm ada foto
             )
         )
     }
@@ -269,8 +274,7 @@ fun TopBarProfilePreview() {
         KpriTopBar(
             config = TopBarConfig.Profile(
                 name = "Endra Zhafir",
-                username = "endra_zhafir",
-                userPhotoId = R.drawable.profilepicture
+                username = "endra_zhafir"
             )
         )
     }

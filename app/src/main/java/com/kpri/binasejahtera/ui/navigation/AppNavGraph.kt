@@ -165,8 +165,8 @@ fun AppNavGraph(
                 onConfirmClick = {
                     // Panggil API CheckIn / CheckOut
                     // Dummy LatLong sementara
-                    if (isCheckIn) viewModel.checkIn(-6.2, 106.8, "Lokasi Dummy")
-                    else viewModel.checkOut(-6.2, 106.8, "Lokasi Dummy")
+                    if (isCheckIn) viewModel.checkIn(-6.2, 106.8)
+                    else viewModel.checkOut(-6.2, 106.8)
                 }
             )
         }

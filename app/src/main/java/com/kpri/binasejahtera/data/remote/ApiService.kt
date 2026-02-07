@@ -1,13 +1,12 @@
 package com.kpri.binasejahtera.data.remote
 
+import com.kpri.binasejahtera.data.remote.dto.AttendanceRequest
+import com.kpri.binasejahtera.data.remote.dto.AttendanceStatusResponse
 import com.kpri.binasejahtera.data.remote.dto.BaseResponse
 import com.kpri.binasejahtera.data.remote.dto.CashflowRequest
 import com.kpri.binasejahtera.data.remote.dto.ChangePasswordRequest
-import com.kpri.binasejahtera.data.remote.dto.CheckInRequest
-import com.kpri.binasejahtera.data.remote.dto.CheckOutRequest
 import com.kpri.binasejahtera.data.remote.dto.DepositRequest
 import com.kpri.binasejahtera.data.remote.dto.GoogleLoginRequest
-import com.kpri.binasejahtera.data.remote.dto.HomeDataResponse
 import com.kpri.binasejahtera.data.remote.dto.LoginRequest
 import com.kpri.binasejahtera.data.remote.dto.LoginResponse
 import com.kpri.binasejahtera.data.remote.dto.OfficeResponse
@@ -59,10 +58,8 @@ interface ApiService {
     ): Response<BaseResponse<Any>>
 
     // --- Home & Office ---
-    // Note: Pastikan response JSON dari endpoint ini cocok dengan HomeDataResponse
-    // Jika 'address' isinya cuma string alamat, DTO ini mungkin perlu disesuaikan.
-    @GET("address")
-    suspend fun getHomeData(): Response<BaseResponse<HomeDataResponse>>
+    @GET("employee/attendance")
+    suspend fun getAttendanceStatus(): Response<BaseResponse<AttendanceStatusResponse>>
 
     @GET("employee/presence-location")
     suspend fun getOfficeLocation(): Response<BaseResponse<OfficeResponse>>
@@ -70,12 +67,12 @@ interface ApiService {
     // --- Attendance ---
     @POST("employee/attendance/check-in")
     suspend fun checkIn(
-        @Body request: CheckInRequest
+        @Body request: AttendanceRequest
     ): Response<BaseResponse<Any>>
 
     @POST("employee/attendance/check-out")
     suspend fun checkOut(
-        @Body request: CheckOutRequest
+        @Body request: AttendanceRequest
     ): Response<BaseResponse<Any>>
 
     // --- Report ---

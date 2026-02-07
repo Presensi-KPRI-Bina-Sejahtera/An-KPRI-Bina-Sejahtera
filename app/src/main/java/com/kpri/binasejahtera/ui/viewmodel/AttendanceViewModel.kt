@@ -2,30 +2,44 @@ package com.kpri.binasejahtera.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kpri.binasejahtera.data.remote.dto.CheckInRequest
-import com.kpri.binasejahtera.data.remote.dto.CheckOutRequest
-import com.kpri.binasejahtera.data.remote.dto.HomeDataResponse
-import com.kpri.binasejahtera.data.remote.dto.OfficeResponse
 import com.kpri.binasejahtera.data.repository.AttendanceRepository
+import com.kpri.binasejahtera.data.repository.ProfileRepository
 import com.kpri.binasejahtera.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
+
+data class HomeUiState(
+    val userName: String = "Memuat...",
+    val userPhoto: String? = null,
+    val currentDate: String = "",
+    val checkInTime: String = "--:--:--",
+    val checkOutTime: String = "--:--:--",
+    val workDuration: String = "0 jam 00 menit",
+    val currentAddress: String = "Mencari lokasi...",
+    val officeAddress: String = "Memuat alamat kantor...",
+    val isCheckIn: Boolean = false,
+    val isCheckOut: Boolean = false
+)
 
 @HiltViewModel
 class AttendanceViewModel @Inject constructor(
-    private val repository: AttendanceRepository
+    private val attendanceRepository: AttendanceRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
-    private val _homeData = MutableStateFlow<HomeDataResponse?>(null)
-    val homeData = _homeData.asStateFlow()
-
-    private val _officeLocation = MutableStateFlow<OfficeResponse?>(null)
-    val officeLocation = _officeLocation.asStateFlow()
+    private val _homeState = MutableStateFlow(HomeUiState())
+    val homeState = _homeState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -33,51 +47,121 @@ class AttendanceViewModel @Inject constructor(
     private val _attendanceEvent = Channel<AttendanceEvent>()
     val attendanceEvent = _attendanceEvent.receiveAsFlow()
 
-    fun loadHomeData() {
+    private var durationJob: Job? = null
+
+    init {
+        loadInitialData()
+    }
+
+    private fun loadInitialData() {
+        val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID"))
+        _homeState.value = _homeState.value.copy(
+            currentDate = dateFormat.format(Date())
+        )
+        loadProfile()
+        loadDashboardData()
+    }
+
+    private fun loadProfile() {
         viewModelScope.launch {
-            repository.getHomeData().collect { result ->
-                when (result) {
-                    is Resource.Loading -> _isLoading.value = true
-                    is Resource.Success -> {
-                        _isLoading.value = false
-                        _homeData.value = result.data
-                    }
-                    is Resource.Error -> {
-                        _isLoading.value = false
-                        _attendanceEvent.send(AttendanceEvent.Error(result.message ?: "Gagal memuat data home"))
+            profileRepository.getProfile().collect { result ->
+                if (result is Resource.Success) {
+                    val data = result.data
+                    _homeState.value = _homeState.value.copy(
+                        userName = data?.name ?: "User KPRI",
+                        userPhoto = data?.profileImage
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadDashboardData() {
+        viewModelScope.launch {
+            attendanceRepository.getOfficeLocation().collect { result ->
+                if (result is Resource.Success) {
+                    _homeState.value = _homeState.value.copy(
+                        officeAddress = result.data?.address ?: "Lokasi kantor tidak ditemukan"
+                    )
+                }
+            }
+
+            // status presensi hari ini
+            attendanceRepository.getAttendanceStatus().collect { result ->
+                if (result is Resource.Success) {
+                    val data = result.data
+                    val jamMasuk = data?.jamMasuk ?: "--:--:--"
+                    val jamPulang = data?.jamPulang ?: "--:--:--"
+
+                    val sudahMasuk = data?.sudahMasuk ?: false
+                    val sudahPulang = data?.sudahPulang ?: false
+
+                    _homeState.value = _homeState.value.copy(
+                        checkInTime = jamMasuk,
+                        checkOutTime = jamPulang,
+                        isCheckIn = sudahMasuk && !sudahPulang,
+                        isCheckOut = sudahPulang,
+                        workDuration = data?.workDurationText ?: "0 jam 00 menit"
+                    )
+
+                    // jika user sedang kerja, nyalakan timer lokal
+                    if (sudahMasuk && !sudahPulang && data?.jamMasuk != null) {
+                        startDurationTimer(data.jamMasuk)
+                    } else {
+                        durationJob?.cancel() // stop timer jika sudah pulang/belum masuk
                     }
                 }
             }
         }
     }
 
-    fun loadOfficeLocation() {
-        viewModelScope.launch {
-            repository.getOfficeLocation().collect { result ->
-                when (result) {
-                    is Resource.Loading -> _isLoading.value = true
-                    is Resource.Success -> {
-                        _isLoading.value = false
-                        _officeLocation.value = result.data
+    fun updateUserLocation(address: String) {
+        _homeState.value = _homeState.value.copy(currentAddress = address)
+    }
+
+    private fun startDurationTimer(startTimeStr: String) {
+        durationJob?.cancel()
+        durationJob = viewModelScope.launch {
+            val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            val startTime = try {
+                format.parse(startTimeStr)?.time ?: return@launch
+            } catch (e: Exception) { return@launch }
+
+            while (isActive) {
+                val now = System.currentTimeMillis()
+                val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val fullFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+                try {
+                    val startMillis = fullFormat.parse("$todayStr $startTimeStr")?.time ?: now
+                    val diff = now - startMillis
+
+                    if (diff > 0) {
+                        val hours = diff / (1000 * 60 * 60)
+                        val minutes = (diff / (1000 * 60)) % 60
+                        _homeState.value = _homeState.value.copy(
+                            workDuration = "$hours jam $minutes menit"
+                        )
                     }
-                    is Resource.Error -> {
-                        _isLoading.value = false
-                        _attendanceEvent.send(AttendanceEvent.Error(result.message ?: "Gagal memuat lokasi kantor"))
-                    }
+                } catch (e: Exception) {
+                    // fallback jika parsing gagal
                 }
+
+                delay(60000)
             }
         }
     }
 
-    fun checkIn(lat: Double, long: Double, address: String) {
+    fun checkIn(lat: Double, long: Double) {
         viewModelScope.launch {
-            repository.checkIn(CheckInRequest(lat, long, address)).collect { result ->
+            _isLoading.value = true
+            attendanceRepository.checkIn(lat, long).collect { result ->
                 when (result) {
                     is Resource.Loading -> _isLoading.value = true
                     is Resource.Success -> {
                         _isLoading.value = false
                         _attendanceEvent.send(AttendanceEvent.Success("Presensi masuk berhasil!"))
-                        loadHomeData()
+                        loadDashboardData()
                     }
                     is Resource.Error -> {
                         _isLoading.value = false
@@ -88,15 +172,16 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    fun checkOut(lat: Double, long: Double, address: String) {
+    fun checkOut(lat: Double, long: Double) {
         viewModelScope.launch {
-            repository.checkOut(CheckOutRequest(lat, long, address)).collect { result ->
+            _isLoading.value = true
+            attendanceRepository.checkOut(lat, long).collect { result ->
                 when (result) {
                     is Resource.Loading -> _isLoading.value = true
                     is Resource.Success -> {
                         _isLoading.value = false
                         _attendanceEvent.send(AttendanceEvent.Success("Presensi pulang berhasil!"))
-                        loadHomeData()
+                        loadDashboardData()
                     }
                     is Resource.Error -> {
                         _isLoading.value = false
