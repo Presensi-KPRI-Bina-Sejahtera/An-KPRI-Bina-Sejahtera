@@ -110,8 +110,8 @@ private fun HomeTopBarContent(config: TopBarConfig.Home) {
                 model = config.userPhotoUrl,
                 contentDescription = "Profile Picture",
                 contentScale = ContentScale.Crop,
-                placeholder = painterResource(id = R.drawable.profilepicture),
-                error = painterResource(id = R.drawable.profilepicture)
+                placeholder = painterResource(id = R.drawable.defaultprofilepicture),
+                error = painterResource(id = R.drawable.defaultprofilepicture)
             )
         }
 
@@ -212,8 +212,8 @@ private fun ProfileTopBarContent(config: TopBarConfig.Profile) {
                     model = config.userPhotoUrl,
                     contentDescription = "Profile Picture",
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.profilepicture),
-                    error = painterResource(id = R.drawable.profilepicture)
+                    placeholder = painterResource(id = R.drawable.defaultprofilepicture),
+                    error = painterResource(id = R.drawable.defaultprofilepicture)
                 )
             }
 

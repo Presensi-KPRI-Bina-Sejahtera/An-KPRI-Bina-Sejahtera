@@ -47,7 +47,8 @@ fun KpriTextField(
     iconColor: Color = TertiaryGray,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     backgroundColor: Color = TertiaryGray.copy(alpha = 0.05f),
-    hasShadow: Boolean = false
+    hasShadow: Boolean = false,
+    singleLine: Boolean = true
 ) {
 
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -75,6 +76,7 @@ fun KpriTextField(
                     color = TertiaryGray
                 )
             },
+            singleLine = singleLine,
             leadingIcon = if (iconId != null) {
                 {
                     Icon(

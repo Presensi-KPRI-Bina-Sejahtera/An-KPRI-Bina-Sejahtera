@@ -139,7 +139,7 @@ fun EditProfileScreen(
                         )
                     } else {
                         Image(
-                            painter = painterResource(id = R.drawable.profilepicture),
+                            painter = painterResource(id = R.drawable.defaultprofilepicture),
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxSize()
