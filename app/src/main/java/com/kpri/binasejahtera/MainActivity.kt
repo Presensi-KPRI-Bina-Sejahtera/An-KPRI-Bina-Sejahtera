@@ -6,6 +6,9 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -64,10 +67,17 @@ class MainActivity : ComponentActivity() {
                     showSplashScreen = false
                 }
 
+                // animasi
+                LaunchedEffect(isUserLoggedIn) {
+                    if (isUserLoggedIn != null) {
+                        delay(1500)
+                        showSplashScreen = false
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxSize()) {
-                    if (showSplashScreen || isUserLoggedIn == null) {
-                        MainScreen()
-                    } else {
+                    // render main page dibelakang splashscreen
+                    if (isUserLoggedIn != null) {
                         val startDest = if (isUserLoggedIn == true) Screen.Home.route else Screen.Login.route
 
                         AppNavGraph(
@@ -75,7 +85,18 @@ class MainActivity : ComponentActivity() {
                             startDestination = startDest
                         )
                     }
-                    
+
+                    // splashscreen dengan Street Spirit (Fade Out)
+                    AnimatedVisibility(
+                        visible = showSplashScreen,
+                        exit = fadeOut(
+                            animationSpec = tween(durationMillis = 1000)
+                        ),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        MainScreen()
+                    }
+
                     KpriCustomToastHost()
                 }
             }
