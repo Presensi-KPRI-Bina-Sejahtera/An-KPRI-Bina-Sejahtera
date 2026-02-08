@@ -30,6 +30,7 @@ data class HomeUiState(
     val checkOutTime: String = "--:--:--",
     val workDuration: String = "0 jam 00 menit",
     val currentAddress: String = "Mencari lokasi...",
+    val officeMapsUrl: String? = null,
     val officeAddress: String = "Memuat alamat kantor...",
     val isCheckIn: Boolean = false,
     val isCheckOut: Boolean = false
@@ -108,7 +109,8 @@ class AttendanceViewModel @Inject constructor(
                     if (result is Resource.Success) {
                         cachedOfficeLocation = result.data
                         _homeState.value = _homeState.value.copy(
-                            officeAddress = result.data?.address ?: "Lokasi kantor tidak ditemukan"
+                            officeAddress = result.data?.address ?: "Lokasi kantor tidak ditemukan",
+                            officeMapsUrl = result.data?.mapsUrl
                         )
                     }
                 }

@@ -1,5 +1,7 @@
 package com.kpri.binasejahtera.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +54,7 @@ import com.kpri.binasejahtera.ui.theme.SuccessGreen
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
 import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 import com.kpri.binasejahtera.ui.viewmodel.HomeUiState
+import androidx.core.net.toUri
 
 @Composable
 fun HomeScreen(
@@ -70,6 +74,8 @@ fun HomeContent(
     state: HomeUiState,
     onNavigate: (String) -> Unit
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             KpriTopBar(
@@ -239,7 +245,18 @@ fun HomeContent(
                     title = "Berangkat Ke Tempat Kerja",
                     value = state.officeAddress,
                     iconId = R.drawable.ic_nav_arrow,
-                    onClick = {}
+                    onClick = {
+                        val mapUrl = state.officeMapsUrl
+                            ?: "geo:0,0?q=${Uri.encode(state.officeAddress)}"
+
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, mapUrl.toUri())
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            // Handle jika user tidak punya browser/maps (jarang terjadi)
+                            e.printStackTrace()
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(120.dp))
