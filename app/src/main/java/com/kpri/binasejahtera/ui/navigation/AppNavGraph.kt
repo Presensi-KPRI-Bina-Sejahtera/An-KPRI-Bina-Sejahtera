@@ -106,6 +106,23 @@ fun AppNavGraph(
                 onLoginClick = { email, pass -> viewModel.login(email, pass) },
                 onGoogleSignInClick = { handleGoogleSignIn() }
             )
+
+            LaunchedEffect(Unit) {
+                viewModel.authEvent.collect { event ->
+                    when (event) {
+                        is AuthViewModel.AuthEvent.Success -> {
+                            ToastManager.show(event.message, ToastType.SUCCESS)
+
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                        }
+                        is AuthViewModel.AuthEvent.Error -> {
+                            ToastManager.show(event.message, ToastType.ERROR)
+                        }
+                    }
+                }
+            }
         }
 
         // --- Home ---

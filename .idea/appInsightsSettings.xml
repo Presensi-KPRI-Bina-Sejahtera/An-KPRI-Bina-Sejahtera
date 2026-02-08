@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.kpri.binasejahtera" />
-                  <option name="mobileSdkAppId" value="1:522048041330:android:c8219cdce8deae2a4a2deb" />
-                  <option name="projectId" value="kpribinasejahtera-32431" />
-                  <option name="projectNumber" value="522048041330" />
+                  <option name="appId" value="PLACEHOLDER" />
+                  <option name="mobileSdkAppId" value="" />
+                  <option name="projectId" value="" />
+                  <option name="projectNumber" value="" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
