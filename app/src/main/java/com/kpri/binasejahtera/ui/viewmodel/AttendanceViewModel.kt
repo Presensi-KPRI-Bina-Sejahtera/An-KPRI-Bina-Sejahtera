@@ -107,7 +107,7 @@ class AttendanceViewModel @Inject constructor(
         loadUserLocation()
     }
 
-    private fun loadUserLocation() {
+    fun loadUserLocation() {
         viewModelScope.launch {
             try {
                 val location = locationHelper.getCurrentLocation()

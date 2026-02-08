@@ -3,6 +3,7 @@ package com.kpri.binasejahtera.ui.screens
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -80,9 +81,9 @@ fun EditProfileScreen(
 
     val context = LocalContext.current
 
-    // buka galeri
+    // pakai photo picker biar lebih private cihuyy
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let {
             val file = uriToFile(context, it)
@@ -159,7 +160,11 @@ fun EditProfileScreen(
                     modifier = Modifier
                         .size(32.dp)
                         .align(Alignment.BottomEnd)
-                        .clickable { imagePickerLauncher.launch("image/*") }
+                        .clickable {
+                            imagePickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_camera),
@@ -179,7 +184,12 @@ fun EditProfileScreen(
                 shape = Shapes.small,
                 shadowElevation = 12.dp,
                 border = BorderStroke(1.dp, AccentBlue),
-                modifier = Modifier.clickable { imagePickerLauncher.launch("image/*") }
+                modifier = Modifier
+                    .clickable {
+                        imagePickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
             ) {
                 Text(
                     text = "Ubah Foto",
