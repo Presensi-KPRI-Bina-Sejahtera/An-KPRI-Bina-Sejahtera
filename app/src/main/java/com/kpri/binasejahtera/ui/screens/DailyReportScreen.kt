@@ -182,7 +182,7 @@ fun DailyReportScreen(
                     val dtoList = depositList.map { item ->
                         DepositItemDto(
                             memberName = item.name,
-                            type = if (item.isSimpanan) "Simpanan" else "Angsuran",
+                            type = if (item.isSimpanan) "simpanan" else "angsuran",
                             amount = item.amount
                                 .replace(Regex("[^0-9]"), "")
                                 .toLongOrNull() ?: 0L
