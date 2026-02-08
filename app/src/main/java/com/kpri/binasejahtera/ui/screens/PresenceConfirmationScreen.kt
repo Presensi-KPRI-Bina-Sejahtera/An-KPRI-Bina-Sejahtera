@@ -218,13 +218,23 @@ fun PresenceConfirmationScreen(
                         )
                     }
 
+                    if (state.isAlreadyDone) {
+                        Text(
+                            text = if (isCheckIn) "Anda sudah melakukan Presensi Masuk hari ini" else "Anda sudah melakukan Presensi Pulang hari ini",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ErrorRed,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
                     // tombol presensi
                     KpriPrimaryButton(
                         text = "$title Sekarang",
                         iconId = R.drawable.ic_map,
                         onClick = onConfirmClick,
                         isIconStart = true,
-                        enabled = state.isSafe && !state.isLoadingLocation,
+                        enabled = state.isSafe && !state.isLoadingLocation && !state.isAlreadyDone,
                         modifier = Modifier.fillMaxWidth()
                     )
 

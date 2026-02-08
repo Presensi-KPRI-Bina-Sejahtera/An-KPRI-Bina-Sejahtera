@@ -197,7 +197,7 @@ fun AppNavGraph(
             var successDialogMessage by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(Unit) {
-                viewModel.initPresenceConfirmation()
+                viewModel.initPresenceConfirmation(isCheckIn)
             }
 
             LaunchedEffect(true) {

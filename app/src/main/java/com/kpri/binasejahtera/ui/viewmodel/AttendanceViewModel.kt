@@ -46,10 +46,11 @@ data class ConfirmationUiState(
     val officeLong: Double = 0.0,
     val officeName: String = "Memuat...",
     val officeAddress: String = "...",
-    val maxRadius: Double = 50.0, // max radius 50m
+    val maxRadius: Double = 50.0,
     val currentDistance: Double = 0.0,
     val isSafe: Boolean = false,
     val isLoadingLocation: Boolean = true,
+    val isAlreadyDone: Boolean = false,
     val error: String? = null
 )
 
@@ -233,25 +234,47 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    fun initPresenceConfirmation() {
+    fun initPresenceConfirmation(isCheckInTarget: Boolean) {
         viewModelScope.launch {
-            _confirmationState.value = _confirmationState.value.copy(isLoadingLocation = true)
+            _confirmationState.value = _confirmationState.value.copy(
+                isLoadingLocation = true,
+                error = null
+            )
 
-            // ambil data kantor terutama dari cache. klo cache null baru fetch ulang
-            val office = cachedOfficeLocation
+            // cek status presensi
+            launch {
+                attendanceRepository.getAttendanceStatus().collect { result ->
+                    if (result is Resource.Success) {
+                        val data = result.data
 
-            if (office != null) {
-                setupOfficeLocation(office)
-            } else {
-                attendanceRepository.getOfficeLocation().collect { result ->
-                    if (result is Resource.Success && result.data != null) {
-                        cachedOfficeLocation = result.data
-                        setupOfficeLocation(result.data)
-                    } else {
+                        val alreadyDone = if (isCheckInTarget) {
+                            data?.sudahMasuk == true
+                        } else {
+                            data?.sudahPulang == true
+                        }
+
                         _confirmationState.value = _confirmationState.value.copy(
-                            isLoadingLocation = false,
-                            error = result.message ?: "Gagal memuat lokasi kantor"
+                            isAlreadyDone = alreadyDone
                         )
+                    }
+                }
+            }
+
+            launch {
+                val office = cachedOfficeLocation
+                if (office != null) {
+                    setupOfficeLocation(office)
+                } else {
+                    attendanceRepository.getOfficeLocation().collect { result ->
+                        if (result is Resource.Success && result.data != null) {
+                            cachedOfficeLocation = result.data
+                            setupOfficeLocation(result.data)
+                        } else {
+                            _confirmationState.value = _confirmationState.value.copy(
+                                isLoadingLocation = false,
+                                error = result.message ?: "Gagal memuat lokasi kantor"
+                            )
+                        }
                     }
                 }
             }
@@ -267,7 +290,8 @@ class AttendanceViewModel @Inject constructor(
             officeLong = offLong,
             officeName = office.name,
             officeAddress = office.address,
-            maxRadius = office.maxDistance.toDouble()
+            maxRadius = office.maxDistance.toDouble(),
+            error = null
         )
         // lokasi hp user
         getUserLocation()
@@ -295,7 +319,8 @@ class AttendanceViewModel @Inject constructor(
                 userLong = userLong,
                 currentDistance = distance.toDouble(),
                 isSafe = isSafe,
-                isLoadingLocation = false
+                isLoadingLocation = false,
+                error = null
             )
         } else {
             _confirmationState.value = _confirmationState.value.copy(
