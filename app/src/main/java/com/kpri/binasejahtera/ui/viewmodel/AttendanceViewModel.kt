@@ -90,6 +90,31 @@ class AttendanceViewModel @Inject constructor(
         updateGreetingAndDate()
         loadProfile()
         loadDashboardData()
+        loadUserLocation()
+    }
+
+    private fun loadUserLocation() {
+        viewModelScope.launch {
+            try {
+                val location = locationHelper.getCurrentLocation()
+
+                if (location != null) {
+                    val address = locationHelper.getAddressName(location.latitude, location.longitude)
+
+                    _homeState.value = _homeState.value.copy(
+                        currentAddress = address ?: "Alamat tidak ditemukan"
+                    )
+                } else {
+                    _homeState.value = _homeState.value.copy(
+                        currentAddress = "Gagal memuat GPS (Pastikan GPS aktif)"
+                    )
+                }
+            } catch (e: Exception) {
+                _homeState.value = _homeState.value.copy(
+                    currentAddress = "Gagal memuat lokasi"
+                )
+            }
+        }
     }
 
     private fun updateGreetingAndDate() {
