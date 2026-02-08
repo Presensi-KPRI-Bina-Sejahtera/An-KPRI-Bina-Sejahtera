@@ -1,25 +1,27 @@
 package com.kpri.binasejahtera.ui.navigation
 
 import android.app.Activity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
@@ -37,6 +39,7 @@ import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 import com.kpri.binasejahtera.ui.viewmodel.AuthViewModel
 import com.kpri.binasejahtera.ui.viewmodel.ProfileViewModel
 import com.kpri.binasejahtera.ui.viewmodel.ReportViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -53,61 +56,55 @@ fun AppNavGraph(
             val viewModel: AuthViewModel = hiltViewModel()
             val state by viewModel.isLoading.collectAsState()
             val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            val credentialManager = remember { CredentialManager.create(context) }
 
-            val googleSignInClient = remember {
-                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken("364805871560-5sbnmaojh82j4c4hn29a64nni1f7p8vs.apps.googleusercontent.com")
-                    .requestEmail()
-                    .build()
-                GoogleSignIn.getClient(context, gso)
-            }
+            fun handleGoogleSignIn() {
+                scope.launch {
+                    try {
+                        // google public clientID
+                        val googleIdOption = GetGoogleIdOption.Builder()
+                            .setFilterByAuthorizedAccounts(false)
+                            .setServerClientId("364805871560-5sbnmaojh82j4c4hn29a64nni1f7p8vs.apps.googleusercontent.com")
+                            .setAutoSelectEnabled(false)
+                            .build()
 
-            val googleLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.StartActivityForResult()
-            ) { result ->
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                try {
-                    val account = task.getResult(ApiException::class.java)
-                    val idToken = account?.idToken
-                    if (idToken != null) {
-                        viewModel.googleLogin(idToken)
-                    } else {
-                        ToastManager.show("Gagal mendapatkan ID Token Google", ToastType.ERROR)
-                    }
-                } catch (e: ApiException) {
-                    e.printStackTrace()
-                    ToastManager.show("Google Sign In gagal: ${e.statusCode}", ToastType.ERROR)
-                }
-            }
+                        val request = GetCredentialRequest.Builder()
+                            .addCredentialOption(googleIdOption)
+                            .build()
 
-            LaunchedEffect(true) {
-                viewModel.authEvent.collect { event ->
-                    when (event) {
-                        is AuthViewModel.AuthEvent.Success -> {
-                            ToastManager.show(event.message, ToastType.SUCCESS)
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Login.route) { inclusive = true }
+                        val result = credentialManager.getCredential(
+                            request = request,
+                            context = context
+                        )
+
+                        val credential = result.credential
+                        if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                            try {
+                                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                                val idToken = googleIdTokenCredential.idToken
+
+                                viewModel.googleLogin(idToken)
+
+                            } catch (e: GoogleIdTokenParsingException) {
+                                ToastManager.show("Gagal parsing token Google", ToastType.ERROR)
                             }
+                        } else {
+                            ToastManager.show("Tipe kredensial tidak dikenali", ToastType.ERROR)
                         }
-                        is AuthViewModel.AuthEvent.Error -> {
-                            ToastManager.show(event.message, ToastType.ERROR)
-                        }
-                    }
-                }
-            }
 
-            val isUserLoggedIn by viewModel.isUserLoggedIn.collectAsState()
-            LaunchedEffect(isUserLoggedIn) {
-                if (isUserLoggedIn) {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    } catch (e: Exception) {
+                        if (e !is androidx.credentials.exceptions.GetCredentialCancellationException) {
+                            e.printStackTrace()
+                            ToastManager.show("Google Sign In gagal: ${e.message}", ToastType.ERROR)
+                        }
                     }
                 }
             }
 
             LoginScreen(
                 onLoginClick = { email, pass -> viewModel.login(email, pass) },
-                onGoogleSignInClick = { googleLauncher.launch(googleSignInClient.signInIntent) }
+                onGoogleSignInClick = { handleGoogleSignIn() }
             )
         }
 
