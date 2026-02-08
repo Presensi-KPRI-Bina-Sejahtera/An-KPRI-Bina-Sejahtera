@@ -44,6 +44,8 @@ import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriInfoCard
 import com.kpri.binasejahtera.ui.components.KpriTopBar
 import com.kpri.binasejahtera.ui.components.TopBarConfig
+import com.kpri.binasejahtera.ui.components.ToastManager
+import com.kpri.binasejahtera.ui.components.ToastType
 import com.kpri.binasejahtera.ui.theme.AppBackground
 import com.kpri.binasejahtera.ui.theme.ErrorRed
 import com.kpri.binasejahtera.ui.theme.InfoBlue
@@ -217,7 +219,13 @@ fun HomeContent(
                         iconId = R.drawable.ic_in,
                         colorTheme = SuccessGreen,
                         modifier = Modifier.weight(1f),
-                        onClick = { onNavigate("attendance_in") }
+                        onClick = {
+                            if (state.isCheckIn || state.isCheckOut) {
+                                ToastManager.show("Anda sudah presensi masuk hari ini", ToastType.ERROR)
+                            } else {
+                                onNavigate("attendance_in")
+                            }
+                        }
                     )
 
                     DashboardActionCard(
@@ -226,7 +234,15 @@ fun HomeContent(
                         iconId = R.drawable.ic_out,
                         colorTheme = ErrorRed,
                         modifier = Modifier.weight(1f),
-                        onClick = { onNavigate("attendance_out") }
+                        onClick = {
+                            if (state.isCheckOut) {
+                                ToastManager.show("Anda sudah presensi pulang hari ini", ToastType.ERROR)
+                            } else if (!state.isCheckIn) {
+                                ToastManager.show("Anda belum melakukan Presensi Masuk", ToastType.ERROR)
+                            } else {
+                                onNavigate("attendance_out")
+                            }
+                        }
                     )
                 }
 

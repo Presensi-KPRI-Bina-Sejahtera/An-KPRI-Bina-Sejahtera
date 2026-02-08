@@ -18,6 +18,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
+import com.kpri.binasejahtera.ui.components.ToastManager
+import com.kpri.binasejahtera.ui.components.ToastType
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriPresenceTile
@@ -32,6 +38,9 @@ import com.kpri.binasejahtera.ui.theme.TertiaryGray
 fun PresenceScreen(
     onNavigate: (String) -> Unit
 ) {
+    val viewModel: AttendanceViewModel = hiltViewModel()
+    val state by viewModel.homeState.collectAsState()
+
     Scaffold(
         bottomBar = {
             KpriBottomNavigation(
@@ -77,7 +86,13 @@ fun PresenceScreen(
                 subtitle = "Datang & mulai kerja",
                 iconId = R.drawable.ic_in,
                 iconColor = SuccessGreen,
-                onClick = { onNavigate("attendance_in") }
+                onClick = {
+                    if (state.isCheckIn || state.isCheckOut) {
+                        ToastManager.show("Anda sudah presensi masuk hari ini", ToastType.ERROR)
+                    } else {
+                        onNavigate("attendance_in")
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -87,7 +102,15 @@ fun PresenceScreen(
                 subtitle = "Laporan harian & pulang",
                 iconId = R.drawable.ic_out,
                 iconColor = ErrorRed,
-                onClick = { onNavigate("attendance_out") }
+                onClick = {
+                    if (state.isCheckOut) {
+                        ToastManager.show("Anda sudah presensi pulang hari ini", ToastType.ERROR)
+                    } else if (!state.isCheckIn) {
+                        ToastManager.show("Anda belum melakukan Presensi Masuk", ToastType.ERROR)
+                    } else {
+                        onNavigate("attendance_out")
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(100.dp))
