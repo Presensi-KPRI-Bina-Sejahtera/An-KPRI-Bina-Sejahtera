@@ -99,7 +99,7 @@ fun HomeContent(
         }
     }
 
-    // Cek izin otomatis saat masuk halaman
+    // cek izin otomatis saat masuk halaman
     LaunchedEffect(Unit) {
         val hasFineLoc = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarseLoc = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -305,7 +305,6 @@ fun HomeContent(
                             val intent = Intent(Intent.ACTION_VIEW, mapUrl.toUri())
                             context.startActivity(intent)
                         } catch (e: Exception) {
-                            // Handle jika user tidak punya browser/maps (jarang terjadi)
                             e.printStackTrace()
                         }
                     }

@@ -104,7 +104,7 @@ private fun HomeTopBarContent(config: TopBarConfig.Home) {
             shape = CircleShape,
             shadowElevation = 16.dp,
             modifier = Modifier.size(48.dp),
-            color = PrimaryBlack // placeholder
+            color = PrimaryBlack
         ) {
             AsyncImage(
                 model = config.userPhotoUrl,
@@ -244,7 +244,7 @@ fun TopBarHomePreview() {
             config = TopBarConfig.Home(
                 greeting = "Selamat datang,",
                 name = "Endra Zhafir",
-                userPhotoUrl = null // klo blm ada foto
+                userPhotoUrl = null
             )
         )
     }

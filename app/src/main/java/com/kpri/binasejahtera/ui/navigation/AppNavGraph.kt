@@ -129,7 +129,6 @@ fun AppNavGraph(
         // --- Home ---
         composable(Screen.Home.route) {
             val viewModel: AttendanceViewModel = hiltViewModel()
-            // Nanti bind data home dari viewModel disini (homeData.collectAsState)
 
             HomeScreen(
                 onNavigate = { route ->
@@ -268,7 +267,6 @@ fun AppNavGraph(
                         if (event.message.contains("Logout", ignoreCase = true) || event.message.contains("Keluar", ignoreCase = true)) {
                             (context as? Activity)?.finishAffinity()
                         } else {
-                            // Kalau sukses update profil/password biasa
                             ToastManager.show(event.message, ToastType.SUCCESS)
                         }
                     } else if (event is AuthViewModel.AuthEvent.Error) {

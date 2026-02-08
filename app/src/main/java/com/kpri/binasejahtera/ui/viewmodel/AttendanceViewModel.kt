@@ -138,10 +138,10 @@ class AttendanceViewModel @Inject constructor(
 
         val currentTime = hour + (minute / 60.0)
 
-        val greetingText = when {
-            currentTime in 3.0..<11.5 -> "Selamat Pagi,"
-            currentTime in 11.5..<15.0 -> "Selamat Siang,"
-            currentTime in 15.0..<18.0 -> "Selamat Sore,"
+        val greetingText = when (currentTime) {
+            in 3.0..<11.5 -> "Selamat Pagi,"
+            in 11.5..<15.0 -> "Selamat Siang,"
+            in 15.0..<18.0 -> "Selamat Sore,"
             else -> "Selamat Malam,"
         }
 

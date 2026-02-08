@@ -272,9 +272,8 @@ fun uriToFile(context: Context, uri: Uri): File? {
 fun EditProfilePreview() {
     KPRIBinaSejahteraTheme {
         EditProfileScreen(
-            // harus isi semua field ProfileResponse meskipun dummy
             state = ProfileResponse(
-                id = 123, // ngga kepake juga di UI tp ttp harus ditulis di prev
+                id = 123,
                 name = "Endra Zhafir",
                 username = "endra_zhafir",
                 email = "endra@email.com",
@@ -294,7 +293,7 @@ fun EditProfilePreview() {
 fun EditProfileLoadingPreview() {
     KPRIBinaSejahteraTheme {
         EditProfileScreen(
-            state = null, // ketika data blm load
+            state = null,
             onNavigateBack = {},
             onSaveProfile = { _, _, _ -> },
             onUploadPhoto = {}

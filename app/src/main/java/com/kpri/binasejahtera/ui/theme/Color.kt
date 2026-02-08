@@ -3,10 +3,10 @@ package com.kpri.binasejahtera.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Main
-val PrimaryBlack = Color(0xFF2E2E2E) // tombol utama dan teks bold
-val SecondaryGray = Color(0xFF4A4A4A) // untuk deskripsi
-val TertiaryGray = Color(0xFF757575)  // hint/placeholder
-val BorderGray = Color(0xFFF3F4F6) // border
+val PrimaryBlack = Color(0xFF2E2E2E)
+val SecondaryGray = Color(0xFF4A4A4A)
+val TertiaryGray = Color(0xFF757575)
+val BorderGray = Color(0xFFF3F4F6)
 
 // Success Colors
 val SuccessGreen = Color(0xFF00A63E)

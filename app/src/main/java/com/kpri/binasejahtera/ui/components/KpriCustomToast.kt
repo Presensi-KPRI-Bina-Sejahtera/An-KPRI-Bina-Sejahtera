@@ -87,7 +87,6 @@ fun KpriCustomToastHost() {
     }
 }
 
-// UI component (dipisah biar bisa di preview)
 @Composable
 fun KpriToastContent(data: ToastData) {
     val backgroundColor = if (data.type == ToastType.SUCCESS) SuccessGreen else ErrorRed

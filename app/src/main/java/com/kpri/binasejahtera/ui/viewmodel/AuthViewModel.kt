@@ -102,7 +102,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // Helper untuk handle hasil dari API saat login biasa & google
+    // fungsi helper untuk handle hasil dari API saat login biasa & google
     private suspend fun <T> handleAuthResult(result: Resource<T>, successMsg: String) {
         when (result) {
             is Resource.Loading -> _isLoading.value = true
