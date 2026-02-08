@@ -2,6 +2,7 @@ package com.kpri.binasejahtera.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kpri.binasejahtera.data.remote.dto.OfficeResponse
 import com.kpri.binasejahtera.data.repository.AttendanceRepository
 import com.kpri.binasejahtera.data.repository.ProfileRepository
 import com.kpri.binasejahtera.utils.LocationHelper
@@ -70,6 +71,8 @@ class AttendanceViewModel @Inject constructor(
 
     private var durationJob: Job? = null
 
+    private var cachedOfficeLocation: OfficeResponse? = null
+
     init {
         loadInitialData()
     }
@@ -99,12 +102,21 @@ class AttendanceViewModel @Inject constructor(
 
     fun loadDashboardData() {
         viewModelScope.launch {
-            attendanceRepository.getOfficeLocation().collect { result ->
-                if (result is Resource.Success) {
-                    _homeState.value = _homeState.value.copy(
-                        officeAddress = result.data?.address ?: "Lokasi kantor tidak ditemukan"
-                    )
+            // ngecek klo cache kosong baru request API
+            if (cachedOfficeLocation == null) {
+                attendanceRepository.getOfficeLocation().collect { result ->
+                    if (result is Resource.Success) {
+                        cachedOfficeLocation = result.data
+                        _homeState.value = _homeState.value.copy(
+                            officeAddress = result.data?.address ?: "Lokasi kantor tidak ditemukan"
+                        )
+                    }
                 }
+            } else {
+                // pake data cache
+                _homeState.value = _homeState.value.copy(
+                    officeAddress = cachedOfficeLocation?.address ?: "Lokasi kantor tidak ditemukan"
+                )
             }
 
             // status presensi hari ini
@@ -177,31 +189,40 @@ class AttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             _confirmationState.value = _confirmationState.value.copy(isLoadingLocation = true)
 
-            // data kantor dari api
-            attendanceRepository.getOfficeLocation().collect { result ->
-                if (result is Resource.Success) {
-                    val office = result.data!!
-                    val offLat = office.latitude.toDoubleOrNull() ?: 0.0
-                    val offLong = office.longitude.toDoubleOrNull() ?: 0.0
+            // ambil data kantor terutama dari cache. klo cache null baru fetch ulang
+            val office = cachedOfficeLocation
 
-                    _confirmationState.value = _confirmationState.value.copy(
-                        officeLat = offLat,
-                        officeLong = offLong,
-                        officeName = office.name,
-                        officeAddress = office.address,
-                        maxRadius = office.maxDistance.toDouble()
-                    )
-
-                    // lokasi hp user
-                    getUserLocation()
-                } else if (result is Resource.Error) {
-                    _confirmationState.value = _confirmationState.value.copy(
-                        isLoadingLocation = false,
-                        error = "Gagal memuat lokasi kantor"
-                    )
+            if (office != null) {
+                setupOfficeLocation(office)
+            } else {
+                attendanceRepository.getOfficeLocation().collect { result ->
+                    if (result is Resource.Success && result.data != null) {
+                        cachedOfficeLocation = result.data
+                        setupOfficeLocation(result.data)
+                    } else {
+                        _confirmationState.value = _confirmationState.value.copy(
+                            isLoadingLocation = false,
+                            error = result.message ?: "Gagal memuat lokasi kantor"
+                        )
+                    }
                 }
             }
         }
+    }
+
+    private suspend fun setupOfficeLocation(office: OfficeResponse) {
+        val offLat = office.latitude.toDoubleOrNull() ?: 0.0
+        val offLong = office.longitude.toDoubleOrNull() ?: 0.0
+
+        _confirmationState.value = _confirmationState.value.copy(
+            officeLat = offLat,
+            officeLong = offLong,
+            officeName = office.name,
+            officeAddress = office.address,
+            maxRadius = office.maxDistance.toDouble()
+        )
+        // lokasi hp user
+        getUserLocation()
     }
 
     private suspend fun getUserLocation() {
@@ -236,57 +257,42 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    // fun baru yg manggil fun lama
-    fun checkInReal() {
+    fun performAttendance(isCheckIn: Boolean) {
         val lat = _confirmationState.value.userLat
         val long = _confirmationState.value.userLong
-        checkIn(lat, long)
-    }
 
-    fun checkOutReal() {
-        val lat = _confirmationState.value.userLat
-        val long = _confirmationState.value.userLong
-        checkOut(lat, long)
-    }
-
-    fun checkIn(lat: Double, long: Double) {
         viewModelScope.launch {
             _isLoading.value = true
-            attendanceRepository.checkIn(lat, long).collect { result ->
+
+            val flow = if (isCheckIn) {
+                attendanceRepository.checkIn(lat, long)
+            } else {
+                attendanceRepository.checkOut(lat, long)
+            }
+
+            flow.collect { result ->
+                _isLoading.value = false
                 when (result) {
-                    is Resource.Loading -> _isLoading.value = true
                     is Resource.Success -> {
-                        _isLoading.value = false
-                        _attendanceEvent.send(AttendanceEvent.Success("Presensi masuk berhasil!"))
+                        val data = result.data
+                        val type = if (isCheckIn) "Masuk" else "Pulang"
+                        val msg = "Berhasil $type pukul ${data?.time} (Jarak: ${data?.distance}m)"
+
+                        _attendanceEvent.send(AttendanceEvent.Success(msg))
                         loadDashboardData()
                     }
                     is Resource.Error -> {
-                        _isLoading.value = false
                         _attendanceEvent.send(AttendanceEvent.Error(result.message ?: "Gagal presensi"))
                     }
+                    else -> {}
                 }
             }
         }
     }
 
-    fun checkOut(lat: Double, long: Double) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            attendanceRepository.checkOut(lat, long).collect { result ->
-                when (result) {
-                    is Resource.Loading -> _isLoading.value = true
-                    is Resource.Success -> {
-                        _isLoading.value = false
-                        _attendanceEvent.send(AttendanceEvent.Success("Presensi pulang berhasil!"))
-                        loadDashboardData()
-                    }
-                    is Resource.Error -> {
-                        _isLoading.value = false
-                        _attendanceEvent.send(AttendanceEvent.Error(result.message ?: "Gagal presensi"))
-                    }
-                }
-            }
-        }
+    override fun onCleared() {
+        super.onCleared()
+        durationJob?.cancel()
     }
 
     sealed class AttendanceEvent {

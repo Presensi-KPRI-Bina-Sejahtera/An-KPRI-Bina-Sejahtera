@@ -1,5 +1,6 @@
 package com.kpri.binasejahtera.data.remote
 
+import com.kpri.binasejahtera.data.remote.dto.AttendanceActionResponse
 import com.kpri.binasejahtera.data.remote.dto.AttendanceRequest
 import com.kpri.binasejahtera.data.remote.dto.AttendanceStatusResponse
 import com.kpri.binasejahtera.data.remote.dto.BaseResponse
@@ -68,12 +69,12 @@ interface ApiService {
     @POST("employee/attendance/check-in")
     suspend fun checkIn(
         @Body request: AttendanceRequest
-    ): Response<BaseResponse<Any>>
+    ): Response<BaseResponse<AttendanceActionResponse>>
 
     @POST("employee/attendance/check-out")
     suspend fun checkOut(
         @Body request: AttendanceRequest
-    ): Response<BaseResponse<Any>>
+    ): Response<BaseResponse<AttendanceActionResponse>>
 
     // --- Report ---
     @POST("employee/cashflow")

@@ -1,6 +1,7 @@
 package com.kpri.binasejahtera.data.repository
 
 import com.kpri.binasejahtera.data.remote.ApiService
+import com.kpri.binasejahtera.data.remote.dto.AttendanceActionResponse
 import com.kpri.binasejahtera.data.remote.dto.AttendanceRequest
 import com.kpri.binasejahtera.data.remote.dto.AttendanceStatusResponse
 import com.kpri.binasejahtera.data.remote.dto.OfficeResponse
@@ -40,32 +41,34 @@ class AttendanceRepository @Inject constructor(
         }
     }
 
-    fun checkIn(lat: Double, long: Double): Flow<Resource<String>> = flow {
+    fun checkIn(lat: Double, long: Double): Flow<Resource<AttendanceActionResponse>> = flow {
         emit(Resource.Loading())
         try {
             val request = AttendanceRequest(latitude = lat, longitude = long)
             val response = api.checkIn(request)
+            val result = response.body()
 
-            if (response.isSuccessful) {
-                emit(Resource.Success(response.body()?.message ?: "Presensi Masuk berhasil"))
+            if (response.isSuccessful && result?.data != null) {
+                emit(Resource.Success(result.data))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal Presensi Masuk"))
+                emit(Resource.Error(result?.message ?: "Gagal Presensi Masuk"))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
         }
     }
 
-    fun checkOut(lat: Double, long: Double): Flow<Resource<String>> = flow {
+    fun checkOut(lat: Double, long: Double): Flow<Resource<AttendanceActionResponse>> = flow {
         emit(Resource.Loading())
         try {
             val request = AttendanceRequest(latitude = lat, longitude = long)
             val response = api.checkOut(request)
+            val result = response.body()
 
-            if (response.isSuccessful) {
-                emit(Resource.Success(response.body()?.message ?: "Presensi Pulang berhasil"))
+            if (response.isSuccessful && result?.data != null) {
+                emit(Resource.Success(result.data))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal Presensi Pulang"))
+                emit(Resource.Error(result?.message ?: "Gagal Presensi Pulang"))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))

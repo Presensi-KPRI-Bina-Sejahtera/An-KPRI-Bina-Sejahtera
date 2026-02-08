@@ -1,6 +1,8 @@
 package com.kpri.binasejahtera.ui.navigation
 
 import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,6 +17,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
@@ -47,6 +52,33 @@ fun AppNavGraph(
         composable(Screen.Login.route) {
             val viewModel: AuthViewModel = hiltViewModel()
             val state by viewModel.isLoading.collectAsState()
+            val context = LocalContext.current
+
+            val googleSignInClient = remember {
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken("364805871560-5sbnmaojh82j4c4hn29a64nni1f7p8vs.apps.googleusercontent.com")
+                    .requestEmail()
+                    .build()
+                GoogleSignIn.getClient(context, gso)
+            }
+
+            val googleLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)
+                    val idToken = account?.idToken
+                    if (idToken != null) {
+                        viewModel.googleLogin(idToken)
+                    } else {
+                        ToastManager.show("Gagal mendapatkan ID Token Google", ToastType.ERROR)
+                    }
+                } catch (e: ApiException) {
+                    e.printStackTrace()
+                    ToastManager.show("Google Sign In gagal: ${e.statusCode}", ToastType.ERROR)
+                }
+            }
 
             LaunchedEffect(true) {
                 viewModel.authEvent.collect { event ->
@@ -75,7 +107,7 @@ fun AppNavGraph(
 
             LoginScreen(
                 onLoginClick = { email, pass -> viewModel.login(email, pass) },
-                onGoogleSignInClick = { /* TODO: Implement Google Sign In Launch */ }
+                onGoogleSignInClick = { googleLauncher.launch(googleSignInClient.signInIntent) }
             )
         }
 
@@ -189,8 +221,7 @@ fun AppNavGraph(
                 state = confirmState,
                 onBackClick = { navController.popBackStack() },
                 onConfirmClick = {
-                    if (isCheckIn) viewModel.checkInReal()
-                    else viewModel.checkOutReal()
+                    viewModel.performAttendance(isCheckIn)
                 }
             )
         }

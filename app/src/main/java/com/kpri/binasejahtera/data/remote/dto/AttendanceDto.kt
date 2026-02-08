@@ -63,3 +63,11 @@ data class AttendanceRequest(
     @SerializedName("longitude")
     val longitude: Double
 )
+
+data class AttendanceActionResponse(
+    @SerializedName("time")
+    val time: String,
+
+    @SerializedName("distance")
+    val distance: Int
+)

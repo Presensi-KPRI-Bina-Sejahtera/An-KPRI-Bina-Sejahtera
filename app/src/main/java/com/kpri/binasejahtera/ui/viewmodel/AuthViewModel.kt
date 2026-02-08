@@ -53,7 +53,11 @@ class AuthViewModel @Inject constructor(
 
     fun googleLogin(idToken: String) {
         viewModelScope.launch {
-            repository.googleLogin(GoogleLoginRequest(idToken)).collect { result ->
+            _isLoading.value = true
+
+            val request = GoogleLoginRequest(idToken = idToken)
+
+            repository.googleLogin(request).collect { result ->
                 handleAuthResult(result, "Login Google berhasil")
             }
         }
