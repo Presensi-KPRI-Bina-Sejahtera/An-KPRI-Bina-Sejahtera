@@ -1,6 +1,5 @@
 package com.kpri.binasejahtera.ui.navigation
 
-import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,11 +30,9 @@ import com.kpri.binasejahtera.ui.components.ToastType
 import com.kpri.binasejahtera.ui.screens.ChangePasswordScreen
 import com.kpri.binasejahtera.ui.screens.DailyReportScreen
 import com.kpri.binasejahtera.ui.screens.EditProfileScreen
-import com.kpri.binasejahtera.ui.screens.HomeScreen
 import com.kpri.binasejahtera.ui.screens.LoginScreen
+import com.kpri.binasejahtera.ui.screens.MainContainerScreen
 import com.kpri.binasejahtera.ui.screens.PresenceConfirmationScreen
-import com.kpri.binasejahtera.ui.screens.PresenceScreen
-import com.kpri.binasejahtera.ui.screens.ProfileScreen
 import com.kpri.binasejahtera.ui.theme.InfoGreen
 import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 import com.kpri.binasejahtera.ui.viewmodel.AuthViewModel
@@ -126,31 +123,31 @@ fun AppNavGraph(
             }
         }
 
-        // --- Home ---
-        composable(Screen.Home.route) {
-            val viewModel: AttendanceViewModel = hiltViewModel()
+        // main route sekarang (digabung semua)
+        composable("dashboard") {
+            val viewModel: AuthViewModel = hiltViewModel()
+            val profileViewModel: ProfileViewModel = hiltViewModel()
+            val profileState by profileViewModel.profileState.collectAsState()
 
-            HomeScreen(
+            MainContainerScreen(
                 onNavigate = { route ->
-                    when (route) {
-                        "attendance_in" -> navController.navigate(Screen.PresenceConfirmation.createRoute(true))
+                    when(route) {
+                        "attendance_in" -> navController.navigate("presence_confirmation/true")
                         "attendance_out" -> navController.navigate(Screen.DailyReport.route)
-                        else -> navController.navigate(route)
+                        "personal_info" -> navController.navigate(Screen.EditProfile.route)
+                        "change_password" -> navController.navigate(Screen.ChangePassword.route)
+                        else -> {
+                            // route home, profile, dll akan ditangani di MainContainerScreen/internal pager
+                        }
                     }
-                }
-            )
-        }
-
-        // --- Presence Selection (BottomNavigation) ---
-        composable(Screen.Presence.route) {
-            PresenceScreen(
-                onNavigate = { route ->
-                    when (route) {
-                        "attendance_in" -> navController.navigate(Screen.PresenceConfirmation.createRoute(true))
-                        "attendance_out" -> navController.navigate(Screen.DailyReport.route)
-                        else -> navController.navigate(route)
+                },
+                onLogout = {
+                    viewModel.logout()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0)
                     }
-                }
+                },
+                profileState = profileState
             )
         }
 
@@ -246,46 +243,6 @@ fun AppNavGraph(
                 onBackClick = { navController.popBackStack() },
                 onConfirmClick = {
                     viewModel.performAttendance(isCheckIn)
-                }
-            )
-        }
-
-        // --- Profile ---
-        composable(Screen.Profile.route) {
-            val viewModel: AuthViewModel = hiltViewModel()
-            val profileViewModel: ProfileViewModel = hiltViewModel()
-            val profileState by profileViewModel.profileState.collectAsState()
-            val context = LocalContext.current
-
-            LaunchedEffect(Unit) {
-                profileViewModel.loadProfile()
-            }
-
-            LaunchedEffect(true) {
-                viewModel.authEvent.collect { event ->
-                    if (event is AuthViewModel.AuthEvent.Success) {
-                        if (event.message.contains("Logout", ignoreCase = true) || event.message.contains("Keluar", ignoreCase = true)) {
-                            (context as? Activity)?.finishAffinity()
-                        } else {
-                            ToastManager.show(event.message, ToastType.SUCCESS)
-                        }
-                    } else if (event is AuthViewModel.AuthEvent.Error) {
-                        ToastManager.show(event.message, ToastType.ERROR)
-                    }
-                }
-            }
-
-            ProfileScreen(
-                state = profileState,
-                onNavigate = { route ->
-                    when (route) {
-                        "personal_info" -> navController.navigate(Screen.EditProfile.route)
-                        "change_password" -> navController.navigate(Screen.ChangePassword.route)
-                        else -> navController.navigate(route)
-                    }
-                },
-                onLogout = {
-                    viewModel.logout()
                 }
             )
         }

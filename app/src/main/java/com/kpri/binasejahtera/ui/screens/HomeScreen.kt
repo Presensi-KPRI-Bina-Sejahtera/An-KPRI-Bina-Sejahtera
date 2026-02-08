@@ -66,14 +66,17 @@ import androidx.core.net.toUri
 
 @Composable
 fun HomeScreen(
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    isNested: Boolean = false
 ) {
     val viewModel: AttendanceViewModel = hiltViewModel()
     val state by viewModel.homeState.collectAsState()
 
     HomeContent(
         state = state,
-        onNavigate = onNavigate
+        onNavigate = onNavigate,
+        onRefreshLocation = { viewModel.loadUserLocation() },
+        isNested = isNested
     )
 }
 
@@ -81,7 +84,8 @@ fun HomeScreen(
 fun HomeContent(
     state: HomeUiState,
     onNavigate: (String) -> Unit,
-    onRefreshLocation: () -> Unit = {}
+    onRefreshLocation: () -> Unit = {},
+    isNested: Boolean = false
 ) {
     val context = LocalContext.current
 
@@ -125,13 +129,15 @@ fun HomeContent(
             )
         },
         bottomBar = {
-            KpriBottomNavigation(
-                currentRoute = "home",
-                onNavigate = onNavigate,
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 24.dp)
-            )
+            if (!isNested) {
+                KpriBottomNavigation(
+                    currentRoute = "home",
+                    onNavigate = onNavigate,
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 24.dp)
+                )
+            }
         },
         containerColor = AppBackground
 
@@ -310,7 +316,7 @@ fun HomeContent(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(160.dp))
             }
         }
     }

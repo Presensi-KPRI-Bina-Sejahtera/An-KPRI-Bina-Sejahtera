@@ -36,20 +36,23 @@ import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun PresenceScreen(
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    isNested: Boolean = false
 ) {
     val viewModel: AttendanceViewModel = hiltViewModel()
     val state by viewModel.homeState.collectAsState()
 
     Scaffold(
         bottomBar = {
-            KpriBottomNavigation(
-                currentRoute = "presence",
-                onNavigate = onNavigate,
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 24.dp)
-            )
+            if (!isNested) {
+                KpriBottomNavigation(
+                    currentRoute = "presence",
+                    onNavigate = onNavigate,
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 24.dp)
+                )
+            }
         },
         containerColor = AppBackground
     ) { innerPadding ->

@@ -36,7 +36,8 @@ import com.kpri.binasejahtera.ui.theme.TertiaryGray
 fun ProfileScreen(
     state: ProfileResponse?,
     onNavigate: (String) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    isNested: Boolean = false
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
 
@@ -70,17 +71,19 @@ fun ProfileScreen(
         },
 
         bottomBar = {
-            KpriBottomNavigation(
-                currentRoute = "profile",
-                onNavigate = onNavigate,
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 24.dp)
-            )
+            if (!isNested) {
+                KpriBottomNavigation(
+                    currentRoute = "profile",
+                    onNavigate = onNavigate,
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 24.dp)
+                )
+            }
         },
         containerColor = AppBackground
     ) {
-        innerPadding ->
+            innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
