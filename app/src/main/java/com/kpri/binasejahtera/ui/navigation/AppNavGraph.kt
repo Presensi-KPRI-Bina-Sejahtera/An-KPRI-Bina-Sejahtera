@@ -302,6 +302,7 @@ fun AppNavGraph(
                     when(event) {
                         is ProfileViewModel.ProfileEvent.Success -> {
                             ToastManager.show(event.message, ToastType.SUCCESS)
+                            navController.popBackStack()
                         }
                         is ProfileViewModel.ProfileEvent.Error -> {
                             ToastManager.show(event.message, ToastType.ERROR)
@@ -328,11 +329,15 @@ fun AppNavGraph(
 
             LaunchedEffect(true) {
                 viewModel.authEvent.collect { event ->
-                    if (event is AuthViewModel.AuthEvent.Success) {
-                        ToastManager.show(event.message, ToastType.SUCCESS)
-                        navController.popBackStack()
+                    when(event) {
+                        is AuthViewModel.AuthEvent.Success -> {
+                            ToastManager.show(event.message, ToastType.SUCCESS)
+                            navController.popBackStack()
+                        }
+                        is AuthViewModel.AuthEvent.Error -> {
+                            ToastManager.show(event.message, ToastType.ERROR)
+                        }
                     }
-                    // ...
                 }
             }
 
