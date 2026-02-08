@@ -63,7 +63,7 @@ fun ProfileScreen(
             KpriTopBar(
                 config = TopBarConfig.Profile(
                     name = state?.name ?: "Memuat...",
-                    username = state?.username ?: "...",
+                    username = state?.username ?: "Memuat...",
                     userPhotoUrl = state?.profileImage
                 )
             )
