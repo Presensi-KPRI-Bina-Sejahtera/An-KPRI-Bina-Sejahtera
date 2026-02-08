@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.R
+import com.kpri.binasejahtera.data.remote.dto.ProfileResponse
 import com.kpri.binasejahtera.ui.components.KpriActionCard
 import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriTopBar
@@ -33,6 +34,7 @@ import com.kpri.binasejahtera.ui.theme.TertiaryGray
 
 @Composable
 fun ProfileScreen(
+    state: ProfileResponse?,
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -60,9 +62,9 @@ fun ProfileScreen(
         topBar = {
             KpriTopBar(
                 config = TopBarConfig.Profile(
-                    name = "Endra Zhafir",
-                    username = "endra_zhafir",
-                    userPhotoUrl = null
+                    name = state?.name ?: "Memuat...",
+                    username = state?.username ?: "...",
+                    userPhotoUrl = state?.profileImage
                 )
             )
         },
@@ -139,6 +141,15 @@ fun ProfileScreen(
 fun ProfileScreenPreview() {
     KPRIBinaSejahteraTheme {
         ProfileScreen(
+            state = ProfileResponse(
+                id = 123,
+                name = "Endra Zhafir",
+                username = "endra_zhafir",
+                email = "endra@email.com",
+                role = "employee",
+                profileImage = null,
+                hasPassword = true
+            ),
             onNavigate = {},
             onLogout = {}
         )

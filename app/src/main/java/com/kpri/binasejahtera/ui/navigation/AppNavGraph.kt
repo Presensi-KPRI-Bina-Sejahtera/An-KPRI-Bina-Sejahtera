@@ -243,8 +243,13 @@ fun AppNavGraph(
         // --- Profile ---
         composable(Screen.Profile.route) {
             val viewModel: AuthViewModel = hiltViewModel()
-
+            val profileViewModel: ProfileViewModel = hiltViewModel()
+            val profileState by profileViewModel.profileState.collectAsState()
             val context = LocalContext.current
+
+            LaunchedEffect(Unit) {
+                profileViewModel.loadProfile()
+            }
 
             LaunchedEffect(true) {
                 viewModel.authEvent.collect { event ->
@@ -262,6 +267,7 @@ fun AppNavGraph(
             }
 
             ProfileScreen(
+                state = profileState,
                 onNavigate = { route ->
                     when (route) {
                         "personal_info" -> navController.navigate(Screen.EditProfile.route)
@@ -269,7 +275,6 @@ fun AppNavGraph(
                         else -> navController.navigate(route)
                     }
                 },
-
                 onLogout = {
                     viewModel.logout()
                 }
