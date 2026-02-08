@@ -2,9 +2,13 @@ package com.kpri.binasejahtera.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kpri.binasejahtera.data.remote.dto.CashflowRequest
+import com.kpri.binasejahtera.data.remote.dto.DepositItemDto
+import com.kpri.binasejahtera.data.remote.dto.DepositRequest
 import com.kpri.binasejahtera.data.remote.dto.OfficeResponse
 import com.kpri.binasejahtera.data.repository.AttendanceRepository
 import com.kpri.binasejahtera.data.repository.ProfileRepository
+import com.kpri.binasejahtera.data.repository.ReportRepository
 import com.kpri.binasejahtera.utils.LocationHelper
 import com.kpri.binasejahtera.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,10 +58,18 @@ data class ConfirmationUiState(
     val error: String? = null
 )
 
+// nampung data di laporan
+data class PendingReportData(
+    val pemasukan: Long,
+    val pengeluaran: Long,
+    val deposits: List<DepositItemDto>
+)
+
 @HiltViewModel
 class AttendanceViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
     private val profileRepository: ProfileRepository,
+    private val reportRepository: ReportRepository,
     private val locationHelper: LocationHelper
 ) : ViewModel() {
 
@@ -76,6 +88,8 @@ class AttendanceViewModel @Inject constructor(
     private var durationJob: Job? = null
 
     private var cachedOfficeLocation: OfficeResponse? = null
+
+    private var pendingReportData: PendingReportData? = null
 
     init {
         loadInitialData()
@@ -209,10 +223,6 @@ class AttendanceViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun updateUserLocation(address: String) {
-        _homeState.value = _homeState.value.copy(currentAddress = address)
     }
 
     private fun startDurationTimer(startTimeStr: String) {
@@ -355,12 +365,56 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
+    fun setPendingReport(pemasukan: String, pengeluaran: String, deposits: List<DepositItemDto>) {
+        val cleanPemasukan = pemasukan.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L
+        val cleanPengeluaran = pengeluaran.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L
+
+        pendingReportData = PendingReportData(
+            pemasukan = cleanPemasukan,
+            pengeluaran = cleanPengeluaran,
+            deposits = deposits
+        )
+    }
+
     fun performAttendance(isCheckIn: Boolean) {
         val lat = _confirmationState.value.userLat
         val long = _confirmationState.value.userLong
 
         viewModelScope.launch {
             _isLoading.value = true
+
+            if (!isCheckIn && pendingReportData != null) {
+                val report = pendingReportData!!
+                var isReportFailed = false
+
+                // kirim cashflow
+                val cashflowReq = CashflowRequest(report.pemasukan, report.pengeluaran)
+                reportRepository.sendCashflow(cashflowReq).collect { res ->
+                    if (res is Resource.Error) {
+                        _attendanceEvent.send(AttendanceEvent.Error("Gagal kirim keuangan: ${res.message}"))
+                        isReportFailed = true
+                    }
+                }
+                if (isReportFailed) {
+                    _isLoading.value = false
+                    return@launch
+                }
+
+                // kirim deposit
+                if (report.deposits.isNotEmpty()) {
+                    val depositReq = DepositRequest(report.deposits)
+                    reportRepository.sendDeposits(depositReq).collect { res ->
+                        if (res is Resource.Error) {
+                            _attendanceEvent.send(AttendanceEvent.Error("Gagal kirim setoran: ${res.message}"))
+                            isReportFailed = true
+                        }
+                    }
+                }
+                if (isReportFailed) {
+                    _isLoading.value = false
+                    return@launch
+                }
+            }
 
             val flow = if (isCheckIn) {
                 attendanceRepository.checkIn(lat, long)
@@ -375,6 +429,7 @@ class AttendanceViewModel @Inject constructor(
                         val data = result.data
                         val type = if (isCheckIn) "Masuk" else "Pulang"
                         val msg = "Berhasil $type pukul ${data?.time} (Jarak: ${data?.distance}m)"
+                        pendingReportData = null
 
                         _attendanceEvent.send(AttendanceEvent.Success(msg))
                         loadDashboardData()

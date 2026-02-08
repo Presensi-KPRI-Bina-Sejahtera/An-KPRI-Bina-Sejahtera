@@ -22,11 +22,12 @@ import androidx.navigation.navArgument
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.gson.Gson
 import com.kpri.binasejahtera.R
+import com.kpri.binasejahtera.data.remote.dto.DepositItemDto
+import com.kpri.binasejahtera.ui.components.KpriDialog
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
-import com.kpri.binasejahtera.ui.components.KpriDialog
-import com.kpri.binasejahtera.ui.theme.InfoGreen
 import com.kpri.binasejahtera.ui.screens.ChangePasswordScreen
 import com.kpri.binasejahtera.ui.screens.DailyReportScreen
 import com.kpri.binasejahtera.ui.screens.EditProfileScreen
@@ -35,10 +36,10 @@ import com.kpri.binasejahtera.ui.screens.LoginScreen
 import com.kpri.binasejahtera.ui.screens.PresenceConfirmationScreen
 import com.kpri.binasejahtera.ui.screens.PresenceScreen
 import com.kpri.binasejahtera.ui.screens.ProfileScreen
+import com.kpri.binasejahtera.ui.theme.InfoGreen
 import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 import com.kpri.binasejahtera.ui.viewmodel.AuthViewModel
 import com.kpri.binasejahtera.ui.viewmodel.ProfileViewModel
-import com.kpri.binasejahtera.ui.viewmodel.ReportViewModel
 import kotlinx.coroutines.launch
 
 
@@ -156,29 +157,17 @@ fun AppNavGraph(
 
         // --- Daily Report (report sebelum pulang) ---
         composable(Screen.DailyReport.route) {
-            val viewModel: ReportViewModel = hiltViewModel()
-
-            LaunchedEffect(true) {
-                viewModel.reportEvent.collect { event ->
-                    when(event) {
-                        is ReportViewModel.ReportEvent.Success -> {
-                            ToastManager.show(event.message, ToastType.SUCCESS)
-                            navController.navigate(Screen.PresenceConfirmation.createRoute(false))
-                        }
-                        is ReportViewModel.ReportEvent.Error -> {
-                            ToastManager.show(event.message, ToastType.ERROR)
-                        }
-                    }
-                }
-            }
 
             DailyReportScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateNext = { pemasukan, pengeluaran, deposits ->
-                    viewModel.submitReport(
-                        pemasukan = pemasukan,
-                        pengeluaran = pengeluaran,
-                        deposits = deposits
+                    val gson = Gson()
+                    val depositsJson = gson.toJson(deposits)
+
+                    val encodedDeposits = java.net.URLEncoder.encode(depositsJson, "UTF-8")
+
+                    navController.navigate(
+                        "presence_confirmation/false?pemasukan=$pemasukan&pengeluaran=$pengeluaran&deposits=$encodedDeposits"
                     )
                 }
             )
@@ -186,10 +175,20 @@ fun AppNavGraph(
 
         // --- Presence Confirmation ---
         composable(
-            route = Screen.PresenceConfirmation.route,
-            arguments = listOf(navArgument("status") { type = NavType.BoolType })
+            route = "presence_confirmation/{status}?pemasukan={pemasukan}&pengeluaran={pengeluaran}&deposits={deposits}",
+            arguments = listOf(
+                navArgument("status") { type = NavType.BoolType },
+                navArgument("pemasukan") { type = NavType.StringType; nullable = true },
+                navArgument("pengeluaran") { type = NavType.StringType; nullable = true },
+                navArgument("deposits") { type = NavType.StringType; nullable = true }
+            )
         ) { backStackEntry ->
             val isCheckIn = backStackEntry.arguments?.getBoolean("status") ?: true
+
+            val pemasukan = backStackEntry.arguments?.getString("pemasukan")
+            val pengeluaran = backStackEntry.arguments?.getString("pengeluaran")
+            val depositsRaw = backStackEntry.arguments?.getString("deposits")
+
             val viewModel: AttendanceViewModel = hiltViewModel()
             val confirmState by viewModel.confirmationState.collectAsState()
 
@@ -197,6 +196,18 @@ fun AppNavGraph(
             var successDialogMessage by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(Unit) {
+                if (!isCheckIn && pemasukan != null && pengeluaran != null) {
+                    try {
+                        val gson = Gson()
+                        val depositsList = if (depositsRaw != null) {
+                            gson.fromJson(depositsRaw, Array<DepositItemDto>::class.java).toList()
+                        } else emptyList()
+
+                        viewModel.setPendingReport(pemasukan, pengeluaran, depositsList)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
                 viewModel.initPresenceConfirmation(isCheckIn)
             }
 

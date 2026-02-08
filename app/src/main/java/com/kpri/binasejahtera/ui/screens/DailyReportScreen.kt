@@ -48,6 +48,8 @@ import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
 import com.kpri.binasejahtera.ui.components.KpriTextField
 import com.kpri.binasejahtera.ui.components.KpriTopBar
 import com.kpri.binasejahtera.ui.components.TopBarConfig
+import com.kpri.binasejahtera.ui.components.ToastManager
+import com.kpri.binasejahtera.ui.components.ToastType
 import com.kpri.binasejahtera.ui.theme.AppBackground
 import com.kpri.binasejahtera.ui.theme.ErrorRed
 import com.kpri.binasejahtera.ui.theme.InfoBlue
@@ -179,6 +181,18 @@ fun DailyReportScreen(
                 text = "Lanjut ke Presensi Pulang",
                 iconId = R.drawable.ic_arrow_go,
                 onClick = {
+                    // validasi pengisian keuangan dan deposit
+                    if (pemasukan.isBlank() || pengeluaran.isBlank()) {
+                        ToastManager.show("Harap isi Pemasukan dan Pengeluaran Toko", ToastType.ERROR)
+                        return@KpriPrimaryButton
+                    }
+
+                    val isDepositsValid = depositList.all { it.name.isNotBlank() && it.amount.isNotBlank() }
+                    if (!isDepositsValid) {
+                        ToastManager.show("Harap lengkapi data Setoran Anggota", ToastType.ERROR)
+                        return@KpriPrimaryButton
+                    }
+
                     val dtoList = depositList.map { item ->
                         DepositItemDto(
                             memberName = item.name,
@@ -189,8 +203,8 @@ fun DailyReportScreen(
                         )
                     }
 
+                    // kirim data ke navigasi (ke api nya nnti dulu biar klo ada apa")
                     onNavigateNext(pemasukan, pengeluaran, dtoList)
-
                 },
                 modifier = Modifier.fillMaxWidth()
             )
