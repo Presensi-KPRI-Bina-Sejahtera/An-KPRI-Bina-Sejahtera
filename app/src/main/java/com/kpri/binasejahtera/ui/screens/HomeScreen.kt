@@ -80,7 +80,7 @@ fun HomeContent(
         topBar = {
             KpriTopBar(
                 config = TopBarConfig.Home(
-                    greeting = "Selamat Datang,",
+                    greeting = state.greeting,
                     name = state.userName,
                     userPhotoUrl = state.userPhoto
                 ),
@@ -151,7 +151,7 @@ fun HomeContent(
                             TimeColumn(
                                 label = "Masuk",
                                 time = state.checkInTime,
-                                isPlaceholder = state.checkOutTime == "--:--:--"
+                                isPlaceholder = state.checkInTime == "--:--:--"
                             )
 
                             VerticalDivider(

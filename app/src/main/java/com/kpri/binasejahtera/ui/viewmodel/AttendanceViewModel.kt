@@ -17,12 +17,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
 // home/dashboard
 data class HomeUiState(
+    val greeting: String = "Selamat Datang,",
     val userName: String = "Memuat...",
     val userPhoto: String? = null,
     val currentDate: String = "",
@@ -76,6 +78,7 @@ class AttendanceViewModel @Inject constructor(
 
     init {
         loadInitialData()
+        startRealtimeUpdate()
     }
 
     private fun loadInitialData() {
@@ -83,8 +86,40 @@ class AttendanceViewModel @Inject constructor(
         _homeState.value = _homeState.value.copy(
             currentDate = dateFormat.format(Date())
         )
+        updateGreetingAndDate()
         loadProfile()
         loadDashboardData()
+    }
+
+    private fun updateGreetingAndDate() {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        val currentTime = hour + (minute / 60.0)
+
+        val greetingText = when {
+            currentTime in 3.0..<11.5 -> "Selamat Pagi,"
+            currentTime in 11.5..<15.0 -> "Selamat Siang,"
+            currentTime in 15.0..<18.0 -> "Selamat Sore,"
+            else -> "Selamat Malam,"
+        }
+
+        val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID"))
+
+        _homeState.value = _homeState.value.copy(
+            greeting = greetingText,
+            currentDate = dateFormat.format(calendar.time)
+        )
+    }
+
+    private fun startRealtimeUpdate() {
+        viewModelScope.launch {
+            while(isActive) {
+                updateGreetingAndDate()
+                delay(60000)
+            }
+        }
     }
 
     private fun loadProfile() {
@@ -157,9 +192,10 @@ class AttendanceViewModel @Inject constructor(
     private fun startDurationTimer(startTimeStr: String) {
         durationJob?.cancel()
         durationJob = viewModelScope.launch {
-            val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
             val startTime = try {
-                format.parse(startTimeStr)?.time ?: return@launch
+                timeFormat.parse(startTimeStr)?.time ?: return@launch
             } catch (e: Exception) { return@launch }
 
             while (isActive) {
@@ -168,20 +204,30 @@ class AttendanceViewModel @Inject constructor(
                 val fullFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
                 try {
-                    val startMillis = fullFormat.parse("$todayStr $startTimeStr")?.time ?: now
-                    val diff = now - startMillis
+                    // penggabungan tanggal hari ini + jam masuk buat timestamp yg akurat
+                    val startDateTime = fullFormat.parse("$todayStr $startTimeStr")?.time ?: now
+                    val diff = now - startDateTime
 
                     if (diff > 0) {
                         val hours = diff / (1000 * 60 * 60)
                         val minutes = (diff / (1000 * 60)) % 60
+                        // ini klo mau nambah detiknya.
+                        // val seconds = (diff / 1000) % 60
+
                         _homeState.value = _homeState.value.copy(
                             workDuration = "$hours jam $minutes menit"
                         )
+                    } else {
+                        // fallback klo semisal diff negatif (misal jam di hp nya user ngaco sedikit)
+                        _homeState.value = _homeState.value.copy(
+                            workDuration = "0 jam 0 menit"
+                        )
                     }
                 } catch (e: Exception) {
-                    // fallback jika parsing gagal
+                    e.printStackTrace()
                 }
 
+                // bisa diubah ke 1000 klo mau live per satu detik
                 delay(60000)
             }
         }
