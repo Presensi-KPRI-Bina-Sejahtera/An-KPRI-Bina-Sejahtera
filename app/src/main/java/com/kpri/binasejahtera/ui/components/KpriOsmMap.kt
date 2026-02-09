@@ -28,9 +28,9 @@ fun KpriOsmMap(
     latitude: Double,
     longitude: Double,
     radiusMeter: Double,
+    modifier: Modifier = Modifier,
     userLatitude: Double? = null,
     userLongitude: Double? = null,
-    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val primaryBlackInt = PrimaryBlack.toArgb()

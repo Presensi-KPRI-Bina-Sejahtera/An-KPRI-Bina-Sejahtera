@@ -1,5 +1,6 @@
 package com.kpri.binasejahtera.ui.screens
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -64,7 +65,8 @@ fun MainContainerScreen(
             // layer 1 (konten utama)
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 2
             ) {
                 page ->
                 when (page) {
@@ -92,14 +94,20 @@ fun MainContainerScreen(
                 currentRoute = currentRoute,
                 onNavigate = {
                     route ->
-                    val targerPage = when(route) {
+                    val targetPage = when(route) {
                         "home" -> 0
                         "presence" -> 1
                         "profile" -> 2
                         else -> 0
                     }
                     scope.launch {
-                        pagerState.animateScrollToPage(targerPage)
+                        pagerState.animateScrollToPage(
+                            page = targetPage,
+                            animationSpec = tween(
+                                durationMillis = 500,
+                                easing = androidx.compose.animation.core.FastOutSlowInEasing
+                            )
+                        )
                     }
                 },
                 modifier = Modifier
