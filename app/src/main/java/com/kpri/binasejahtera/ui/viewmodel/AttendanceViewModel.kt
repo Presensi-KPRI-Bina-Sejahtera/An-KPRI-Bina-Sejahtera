@@ -176,49 +176,45 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    fun loadHomeData() {
+    fun loadHomeData(isRefresh: Boolean = false) {
         viewModelScope.launch {
             // ngecek klo cache kosong baru request API
-            if (cachedOfficeLocation == null) {
-                attendanceRepository.getOfficeLocation().collect { result ->
+            launch {
+                attendanceRepository.getOfficeLocation(forceUpdate = isRefresh).collect { result ->
                     if (result is Resource.Success) {
-                        cachedOfficeLocation = result.data
                         _homeState.value = _homeState.value.copy(
                             officeAddress = result.data?.address ?: "Lokasi kantor tidak ditemukan",
                             officeMapsUrl = result.data?.mapsUrl
                         )
                     }
                 }
-            } else {
-                // pake data cache
-                _homeState.value = _homeState.value.copy(
-                    officeAddress = cachedOfficeLocation?.address ?: "Lokasi kantor tidak ditemukan"
-                )
             }
 
             // status presensi hari ini
-            attendanceRepository.getAttendanceStatus().collect { result ->
-                if (result is Resource.Success) {
-                    val data = result.data
-                    val jamMasuk = data?.jamMasuk ?: "--:--:--"
-                    val jamPulang = data?.jamPulang ?: "--:--:--"
+            launch {
+                attendanceRepository.getAttendanceStatus(forceUpdate = isRefresh).collect { result ->
+                    if (result is Resource.Success) {
+                        val data = result.data
+                        val jamMasuk = data?.jamMasuk ?: "--:--:--"
+                        val jamPulang = data?.jamPulang ?: "--:--:--"
 
-                    val sudahMasuk = data?.sudahMasuk ?: false
-                    val sudahPulang = data?.sudahPulang ?: false
+                        val sudahMasuk = data?.sudahMasuk ?: false
+                        val sudahPulang = data?.sudahPulang ?: false
 
-                    _homeState.value = _homeState.value.copy(
-                        checkInTime = jamMasuk,
-                        checkOutTime = jamPulang,
-                        isCheckIn = sudahMasuk && !sudahPulang,
-                        isCheckOut = sudahPulang,
-                        workDuration = data?.workDurationText ?: "0 jam 00 menit"
-                    )
+                        _homeState.value = _homeState.value.copy(
+                            checkInTime = data?.jamMasuk ?: "--:--:--",
+                            checkOutTime = data?.jamPulang ?: "--:--:--",
+                            isCheckIn = data?.sudahMasuk == true && !data.sudahPulang,
+                            isCheckOut = data?.sudahPulang == true,
+                            workDuration = data?.workDurationText ?: "0 jam 00 menit"
+                        )
 
-                    // jika user sedang kerja, nyalakan timer lokal
-                    if (sudahMasuk && !sudahPulang && data?.jamMasuk != null) {
-                        startDurationTimer(data.jamMasuk)
-                    } else {
-                        durationJob?.cancel() // stop timer jika sudah pulang/belum masuk
+                        // jika user sedang kerja, nyalakan timer lokal
+                        if (sudahMasuk && !sudahPulang && data.jamMasuk != null) {
+                            startDurationTimer(data.jamMasuk)
+                        } else {
+                            durationJob?.cancel() // stop timer jika sudah pulang/belum masuk
+                        }
                     }
                 }
             }
@@ -278,7 +274,7 @@ class AttendanceViewModel @Inject constructor(
 
             // cek status presensi
             launch {
-                attendanceRepository.getAttendanceStatus().collect { result ->
+                attendanceRepository.getAttendanceStatus(forceUpdate = false).collect { result ->
                     if (result is Resource.Success) {
                         val data = result.data
 
@@ -300,7 +296,7 @@ class AttendanceViewModel @Inject constructor(
                 if (office != null) {
                     setupOfficeLocation(office)
                 } else {
-                    attendanceRepository.getOfficeLocation().collect { result ->
+                    attendanceRepository.getOfficeLocation(forceUpdate = false).collect { result ->
                         if (result is Resource.Success && result.data != null) {
                             cachedOfficeLocation = result.data
                             setupOfficeLocation(result.data)
@@ -432,7 +428,7 @@ class AttendanceViewModel @Inject constructor(
                         pendingReportData = null
 
                         _attendanceEvent.send(AttendanceEvent.Success(msg))
-                        loadHomeData()
+                        loadHomeData(isRefresh = true)
                     }
                     is Resource.Error -> {
                         _attendanceEvent.send(AttendanceEvent.Error(result.message ?: "Gagal presensi"))

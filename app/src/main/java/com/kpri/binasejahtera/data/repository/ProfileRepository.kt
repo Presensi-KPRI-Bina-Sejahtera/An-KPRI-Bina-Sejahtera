@@ -8,16 +8,32 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class ProfileRepository @Inject constructor(
     private val api: ApiService
 ) {
-    fun getProfile(): Flow<Resource<ProfileResponse>> = flow {
+    // --- Local Cache ---
+    private var cachedProfile: ProfileResponse? = null
+    fun getProfile(forceUpdate: Boolean = false): Flow<Resource<ProfileResponse>> = flow {
+
+        // chcek cache dulu
+        if (!forceUpdate && cachedProfile != null) {
+            emit(Resource.Success(cachedProfile!!))
+            return@flow
+        }
+
+        // ambil api klo kosong
         emit(Resource.Loading())
         try {
             val response = api.getProfile()
             if (response.isSuccessful && response.body()?.data != null) {
-                emit(Resource.Success(response.body()!!.data!!))
+                val data = response.body()!!.data!!
+
+                cachedProfile = data
+
+                emit(Resource.Success(data))
             } else {
                 emit(Resource.Error(response.body()?.message ?: "Gagal memuat profil"))
             }
@@ -31,7 +47,11 @@ class ProfileRepository @Inject constructor(
         try {
             val response = api.updateProfile(request)
             if (response.isSuccessful && response.body()?.data != null) {
-                emit(Resource.Success(response.body()!!.data!!))
+                val data = response.body()!!.data!!
+
+                cachedProfile = data
+
+                emit(Resource.Success(data))
             } else {
                 emit(Resource.Error(response.body()?.message ?: "Gagal update profil"))
             }
@@ -45,6 +65,7 @@ class ProfileRepository @Inject constructor(
         try {
             val response = api.uploadPhoto(photo)
             if (response.isSuccessful) {
+                cachedProfile = null
                 emit(Resource.Success(response.body()?.message ?: "Foto berhasil diupload"))
             } else {
                 emit(Resource.Error(response.body()?.message ?: "Gagal upload foto"))
@@ -52,5 +73,9 @@ class ProfileRepository @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
         }
+    }
+
+    fun clearCache() {
+        cachedProfile = null
     }
 }

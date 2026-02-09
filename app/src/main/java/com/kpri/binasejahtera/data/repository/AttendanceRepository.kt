@@ -9,16 +9,36 @@ import com.kpri.binasejahtera.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class AttendanceRepository @Inject constructor(
     private val api: ApiService
 ) {
-    fun getAttendanceStatus(): Flow<Resource<AttendanceStatusResponse>> = flow {
+    // --- Local Cache ---
+    // buat nyimpen data di local selama app berjalan
+    private var cachedStatus: AttendanceStatusResponse? = null
+    private var cachedOffice: OfficeResponse? = null
+
+    fun getAttendanceStatus(
+        forceUpdate: Boolean = false
+    ): Flow<Resource<AttendanceStatusResponse>> = flow {
+
+        // cek cache dulu
+        if (!forceUpdate && cachedStatus != null) {
+            emit(Resource.Success(cachedStatus!!))
+            return@flow // stop, no internet untuk load data
+        }
+
+        // klo g ada cache, baru load dari api
         emit(Resource.Loading())
         try {
             val response = api.getAttendanceStatus()
             if (response.isSuccessful && response.body()?.data != null) {
-                emit(Resource.Success(response.body()!!.data!!))
+                val data = response.body()!!.data!!
+                // simpen ke cache
+                cachedStatus = data
+                emit(Resource.Success(data))
             } else {
                 emit(Resource.Error(response.body()?.message ?: "Gagal memuat status presensi"))
             }
@@ -27,12 +47,15 @@ class AttendanceRepository @Inject constructor(
         }
     }
 
-    fun getOfficeLocation(): Flow<Resource<OfficeResponse>> = flow {
+    fun getOfficeLocation(forceUpdate: Boolean = false): Flow<Resource<OfficeResponse>> = flow {
         emit(Resource.Loading())
         try {
             val response = api.getOfficeLocation()
             if (response.isSuccessful && response.body()?.data != null) {
-                emit(Resource.Success(response.body()!!.data!!))
+                val data = response.body()!!.data!!
+                // sama kaya diatas
+                cachedOffice = data
+                emit(Resource.Success(data))
             } else {
                 emit(Resource.Error(response.body()?.message ?: "Gagal memuat lokasi kantor"))
             }
@@ -49,6 +72,8 @@ class AttendanceRepository @Inject constructor(
             val result = response.body()
 
             if (response.isSuccessful && result?.data != null) {
+                // hapus cache karena user habis presensi
+                cachedStatus = null
                 emit(Resource.Success(result.data))
             } else {
                 emit(Resource.Error(result?.message ?: "Gagal Presensi Masuk"))
@@ -66,6 +91,8 @@ class AttendanceRepository @Inject constructor(
             val result = response.body()
 
             if (response.isSuccessful && result?.data != null) {
+                // sama kaya yg diatas
+                cachedStatus = null
                 emit(Resource.Success(result.data))
             } else {
                 emit(Resource.Error(result?.message ?: "Gagal Presensi Pulang"))
@@ -73,5 +100,11 @@ class AttendanceRepository @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
         }
+    }
+
+    // logout
+    fun clearCache() {
+        cachedStatus = null
+        cachedOffice = null
     }
 }

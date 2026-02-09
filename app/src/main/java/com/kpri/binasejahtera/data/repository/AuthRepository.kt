@@ -13,7 +13,9 @@ import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
     private val api: ApiService,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val attendanceRepository: AttendanceRepository,
+    private val profileRepository: ProfileRepository
 ) {
 
     // login kredensial biasa
@@ -57,6 +59,8 @@ class AuthRepository @Inject constructor(
             val response = api.logout()
             if (response.isSuccessful) {
                 tokenManager.clearToken()
+                attendanceRepository.clearCache()
+                profileRepository.clearCache()
                 emit(Resource.Success("Berhasil Logout"))
             } else {
                 emit(Resource.Error("Gagal Logout"))
