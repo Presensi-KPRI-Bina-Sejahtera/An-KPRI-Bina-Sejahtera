@@ -30,11 +30,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kpri.binasejahtera.R
-import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
@@ -43,18 +41,33 @@ import com.kpri.binasejahtera.ui.theme.TertiaryGray
 fun KpriBottomNavigation(
     currentRoute: String,
     onNavigate: (String) -> Unit,
+    containerColor: Color,
     modifier: Modifier = Modifier
 ) {
     val isPresenceActive = currentRoute == "presence"
 
-    // animasi transisi warna
-    val navBackgroundColor by animateColorAsState(
-        targetValue = if (isPresenceActive) PrimaryBlack else Color.White,
-        animationSpec = tween(durationMillis = 500), label = "navBg"
+    val animatedContainerColor by animateColorAsState(
+        targetValue = containerColor,
+        animationSpec = tween(durationMillis = 300),
+        label = "navBarBg"
     )
 
+    // animasi transisi warna icon (home dan profile)
     val activeContentColor = if (isPresenceActive) Color.White else PrimaryBlack
     val inactiveContentColor = if (isPresenceActive) Color.White else TertiaryGray
+
+    // animasi transisi warna content
+    val animatedActiveColor by animateColorAsState(
+        targetValue = activeContentColor,
+        animationSpec = tween(200),
+        label = "iconActive"
+    )
+
+    val animatedInactiveColor by animateColorAsState(
+        targetValue = inactiveContentColor.copy(alpha = 0.6f),
+        animationSpec = tween(200),
+        label = "iconInactive"
+    )
 
     // box untuk tombol presensi yang nonjol
     Box(
@@ -74,7 +87,7 @@ fun KpriBottomNavigation(
                     Shapes.medium,
                     spotColor = Color.Black.copy(0.5f)
                 ),
-            color = navBackgroundColor,
+            color = animatedContainerColor,
             shape = Shapes.medium
         ) {
             Row(
@@ -87,8 +100,8 @@ fun KpriBottomNavigation(
                     iconId = R.drawable.ic_home,
                     label = "Home",
                     isSelected = currentRoute == "home",
-                    activeColor = activeContentColor,
-                    inactiveColor = inactiveContentColor,
+                    activeColor = animatedActiveColor,
+                    inactiveColor = animatedInactiveColor,
                     onClick = {
                         if (currentRoute != "home") {
                             onNavigate("home")
@@ -104,8 +117,8 @@ fun KpriBottomNavigation(
                     iconId = R.drawable.ic_profile,
                     label = "Profile",
                     isSelected = currentRoute == "profile",
-                    activeColor = activeContentColor,
-                    inactiveColor = inactiveContentColor,
+                    activeColor = animatedActiveColor,
+                    inactiveColor = animatedInactiveColor,
                     onClick = {
                         if (currentRoute != "profile") {
                             onNavigate("profile")
@@ -121,7 +134,7 @@ fun KpriBottomNavigation(
         ) {
             KpriPresenceButton(
                 isActive = isPresenceActive,
-                outerBorderColor = navBackgroundColor,
+                outerBorderColor = containerColor,
                 onClick = {
                     if (currentRoute != "presence") {
                         onNavigate("presence")
@@ -140,17 +153,17 @@ fun KpriPresenceButton(
 ) {
     val containerColor by animateColorAsState(
         targetValue = if (isActive) Color.White else PrimaryBlack,
-        animationSpec = tween(durationMillis = 500), label = "btnBg"
+        animationSpec = tween(durationMillis = 150), label = "btnBg"
     )
 
     val iconColor by animateColorAsState(
         targetValue = if (isActive) PrimaryBlack else Color.White,
-        animationSpec = tween(durationMillis = 500), label = "btnIcon"
+        animationSpec = tween(durationMillis = 300), label = "btnIcon"
     )
 
     val borderColor by animateColorAsState(
         targetValue = outerBorderColor,
-        animationSpec = tween(durationMillis = 500), label = "btnBorder"
+        animationSpec = tween(durationMillis = 300), label = "btnBorder"
     )
 
     Box(
@@ -214,35 +227,4 @@ fun KpriNavItem(
     }
 }
 
-@Preview(
-    name = "1. Home",
-    showBackground = true
-)
-@Composable
-fun KpriBottomNavHomePreview() {
-    KPRIBinaSejahteraTheme {
-        KpriBottomNavigation(currentRoute = "home", onNavigate = {})
-    }
-}
-
-@Preview(
-    name = "2. Profile",
-    showBackground = true
-)
-@Composable
-fun KpriBottomNavProfilePreview() {
-    KPRIBinaSejahteraTheme {
-        KpriBottomNavigation(currentRoute = "profile", onNavigate = {})
-    }
-}
-
-@Preview(
-    name = "3. Presence",
-    showBackground = true
-)
-@Composable
-fun KpriBottomNavPresencePreview() {
-    KPRIBinaSejahteraTheme {
-        KpriBottomNavigation(currentRoute = "presence", onNavigate = {})
-    }
-}
+// preview kuhilangin soalnya ribet lol

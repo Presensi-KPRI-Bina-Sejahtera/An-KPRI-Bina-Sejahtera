@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kpri.binasejahtera.R
-import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriInfoCard
 import com.kpri.binasejahtera.ui.components.KpriTopBar
 import com.kpri.binasejahtera.ui.components.TopBarConfig
@@ -71,8 +70,7 @@ import androidx.core.net.toUri
 
 @Composable
 fun HomeScreen(
-    onNavigate: (String) -> Unit,
-    isNested: Boolean = false
+    onNavigate: (String) -> Unit
 ) {
     val viewModel: AttendanceViewModel = hiltViewModel()
     val state by viewModel.homeState.collectAsState()
@@ -86,8 +84,7 @@ fun HomeScreen(
         isRefreshing = isRefreshing,
         onRefresh = {
             viewModel.refreshData()
-        },
-        isNested = isNested
+        }
     )
 }
 
@@ -98,8 +95,7 @@ fun HomeContent(
     onNavigate: (String) -> Unit,
     onRefreshLocation: () -> Unit = {},
     isRefreshing: Boolean,
-    onRefresh: () -> Unit,
-    isNested: Boolean = false
+    onRefresh: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -141,17 +137,6 @@ fun HomeContent(
                     userPhotoUrl = state.userPhoto
                 ),
             )
-        },
-        bottomBar = {
-            if (!isNested) {
-                KpriBottomNavigation(
-                    currentRoute = "home",
-                    onNavigate = onNavigate,
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 24.dp)
-                )
-            }
         },
         containerColor = AppBackground
 
@@ -467,8 +452,7 @@ fun HomeScreenPreview() {
             onNavigate = {},
             onRefreshLocation = {},
             isRefreshing = false,
-            onRefresh = {},
-            isNested = false
+            onRefresh = {}
         )
     }
 }

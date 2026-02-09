@@ -17,10 +17,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.data.remote.dto.ProfileResponse
 import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.theme.AppBackground
+import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import kotlinx.coroutines.launch
 
 @Composable
@@ -40,15 +42,18 @@ fun MainContainerScreen(
     // state untuk BottomNavigation
     var currentRoute by remember { mutableStateOf("home") }
 
-    LaunchedEffect(
-        pagerState.currentPage
-    ) {
-       currentRoute = when (pagerState.currentPage) {
-           0 -> "home"
-           1 -> "presence"
-           2 -> "profile"
-           else -> "home"
-       }
+    val isTargetPresence = pagerState.targetPage == 1
+
+    val targetColor = if (isTargetPresence) PrimaryBlack else Color.White
+    if (isTargetPresence) Color.White else PrimaryBlack
+
+    LaunchedEffect(pagerState.currentPage, pagerState.targetPage) {
+        currentRoute = when (pagerState.targetPage) {
+            0 -> "home"
+            1 -> "presence"
+            2 -> "profile"
+            else -> "home"
+        }
     }
 
     Scaffold(
@@ -71,20 +76,17 @@ fun MainContainerScreen(
                 page ->
                 when (page) {
                     0 -> HomeScreen(
-                        onNavigate = onNavigate,
-                        isNested = true
+                        onNavigate = onNavigate
                     )
 
                     1 -> PresenceScreen(
-                        onNavigate = onNavigate,
-                        isNested = true
+                        onNavigate = onNavigate
                     )
 
                     2 -> ProfileScreen(
                         state = profileState,
                         onNavigate = onNavigate,
-                        onLogout = onLogout,
-                        isNested = true
+                        onLogout = onLogout
                     )
                 }
             }
@@ -110,6 +112,7 @@ fun MainContainerScreen(
                         )
                     }
                 },
+                containerColor = targetColor,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(horizontal = 24.dp)

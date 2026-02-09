@@ -12,48 +12,35 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
+import com.kpri.binasejahtera.R
+import com.kpri.binasejahtera.ui.components.KpriPresenceTile
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
-import com.kpri.binasejahtera.R
-import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
-import com.kpri.binasejahtera.ui.components.KpriPresenceTile
 import com.kpri.binasejahtera.ui.theme.AppBackground
 import com.kpri.binasejahtera.ui.theme.ErrorRed
 import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.SuccessGreen
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
+import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 
 @Composable
 fun PresenceScreen(
-    onNavigate: (String) -> Unit,
-    isNested: Boolean = false
+    onNavigate: (String) -> Unit
 ) {
     val viewModel: AttendanceViewModel = hiltViewModel()
     val state by viewModel.homeState.collectAsState()
 
     Scaffold(
-        bottomBar = {
-            if (!isNested) {
-                KpriBottomNavigation(
-                    currentRoute = "presence",
-                    onNavigate = onNavigate,
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 24.dp)
-                )
-            }
-        },
         containerColor = AppBackground
     ) { innerPadding ->
 

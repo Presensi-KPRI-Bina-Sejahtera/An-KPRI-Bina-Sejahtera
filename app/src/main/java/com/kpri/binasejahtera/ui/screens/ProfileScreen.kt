@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.data.remote.dto.ProfileResponse
 import com.kpri.binasejahtera.ui.components.KpriActionCard
-import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.components.KpriTopBar
 import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.components.KpriDialog
@@ -36,8 +35,7 @@ import com.kpri.binasejahtera.ui.theme.TertiaryGray
 fun ProfileScreen(
     state: ProfileResponse?,
     onNavigate: (String) -> Unit,
-    onLogout: () -> Unit,
-    isNested: Boolean = false
+    onLogout: () -> Unit
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
 
@@ -68,18 +66,6 @@ fun ProfileScreen(
                     userPhotoUrl = state?.profileImage
                 )
             )
-        },
-
-        bottomBar = {
-            if (!isNested) {
-                KpriBottomNavigation(
-                    currentRoute = "profile",
-                    onNavigate = onNavigate,
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 24.dp)
-                )
-            }
         },
         containerColor = AppBackground
     ) {
