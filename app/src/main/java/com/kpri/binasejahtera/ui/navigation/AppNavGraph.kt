@@ -241,9 +241,8 @@ fun AppNavGraph(
                 isCheckIn = isCheckIn,
                 state = confirmState,
                 onBackClick = { navController.popBackStack() },
-                onConfirmClick = {
-                    viewModel.performAttendance(isCheckIn)
-                }
+                onConfirmClick = { viewModel.performAttendance(isCheckIn) },
+                onUpdateLocation = { viewModel.refreshUserLocation() }
             )
         }
 

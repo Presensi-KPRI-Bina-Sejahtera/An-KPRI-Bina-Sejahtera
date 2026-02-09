@@ -328,6 +328,12 @@ class AttendanceViewModel @Inject constructor(
         getUserLocation()
     }
 
+    fun refreshUserLocation() {
+        viewModelScope.launch {
+            getUserLocation()
+        }
+    }
+
     private suspend fun getUserLocation() {
         val location = locationHelper.getCurrentLocation()
         if (location != null) {

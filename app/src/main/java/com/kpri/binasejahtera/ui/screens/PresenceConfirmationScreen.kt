@@ -66,7 +66,8 @@ fun PresenceConfirmationScreen(
     isCheckIn: Boolean,
     state: ConfirmationUiState,
     onBackClick: () -> Unit,
-    onConfirmClick: () -> Unit
+    onConfirmClick: () -> Unit,
+    onUpdateLocation: () -> Unit
 ) {
     val title = if (isCheckIn) "Presensi Masuk" else "Presensi Pulang"
 
@@ -87,6 +88,7 @@ fun PresenceConfirmationScreen(
             val now = Date()
             currentTime = timeFormat.format(now)
             currentDate = dateFormat.format(now)
+            onUpdateLocation()
             delay(1000)
         }
     }
@@ -101,6 +103,8 @@ fun PresenceConfirmationScreen(
                 latitude = state.officeLat,
                 longitude = state.officeLong,
                 radiusMeter = state.maxRadius,
+                userLatitude = state.userLat,
+                userLongitude = state.userLong,
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -416,7 +420,8 @@ fun PresenceInSafePreview() {
                 isLoadingLocation = false
             ),
             onBackClick = {},
-            onConfirmClick = {}
+            onConfirmClick = {},
+            onUpdateLocation = {}
         )
     }
 }
@@ -439,10 +444,12 @@ fun PresenceOutDangerPreview() {
                 error = "Anda berada di luar jangkauan"
             ),
             onBackClick = {},
-            onConfirmClick = {}
+            onConfirmClick = {},
+            onUpdateLocation = {}
         )
     }
 }
+
 
 @Preview(name = "3. Loading State", showBackground = true, showSystemUi = true)
 @Composable
@@ -456,7 +463,8 @@ fun PresenceLoadingPreview() {
                 officeAddress = "..."
             ),
             onBackClick = {},
-            onConfirmClick = {}
+            onConfirmClick = {},
+            onUpdateLocation = {}
         )
     }
 }
