@@ -28,6 +28,20 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
+// untuk draft laporan keuangan/daily report (biar data ngga ilang klo mencet back)
+data class ReportDraft(
+    val pemasukan: String = "",
+    val pengeluaran: String = "",
+    val deposits: List<DepositDraftItem> = emptyList()
+)
+
+data class DepositDraftItem(
+    val id: Long = System.currentTimeMillis(),
+    var name: String = "",
+    var amount: String = "",
+    var isSimpanan: Boolean = true
+)
+
 // home/dashboard
 data class HomeUiState(
     val greeting: String = "Selamat Datang,",
@@ -60,11 +74,10 @@ data class ConfirmationUiState(
     val error: String? = null
 )
 
-// nampung data di laporan
-data class PendingReportData(
-    val pemasukan: Long,
-    val pengeluaran: Long,
-    val deposits: List<DepositItemDto>
+// status pengiriman laporan (mitigasi sinyal ngilang)
+data class UploadStatus(
+    var isCashflowSent: Boolean = false,
+    var isDepositSent: Boolean = false
 )
 
 @HiltViewModel
@@ -90,6 +103,9 @@ class AttendanceViewModel @Inject constructor(
     private val _confirmationState = MutableStateFlow(ConfirmationUiState())
     val confirmationState = _confirmationState.asStateFlow()
 
+    private val _reportDraft = MutableStateFlow(ReportDraft())
+    val reportDraft = _reportDraft.asStateFlow()
+
     // mencegah memory leak/dupe process
     private var durationJob: Job? = null
     private var homeDataJob: Job? = null
@@ -97,7 +113,7 @@ class AttendanceViewModel @Inject constructor(
     private var locationJob: Job? = null
 
     private var cachedOfficeLocation: OfficeResponse? = null
-    private var pendingReportData: PendingReportData? = null
+    private var uploadStatus = UploadStatus()
 
     init {
         loadInitialData()
@@ -224,11 +240,6 @@ class AttendanceViewModel @Inject constructor(
                 attendanceRepository.getAttendanceStatus(forceUpdate = isRefresh).collect { result ->
                     if (result is Resource.Success) {
                         val data = result.data
-                        val jamMasuk = data?.jamMasuk ?: "--:--:--"
-                        val jamPulang = data?.jamPulang ?: "--:--:--"
-
-                        val sudahMasuk = data?.sudahMasuk ?: false
-                        val sudahPulang = data?.sudahPulang ?: false
 
                         _homeState.value = _homeState.value.copy(
                             checkInTime = data?.jamMasuk ?: "--:--:--",
@@ -239,10 +250,10 @@ class AttendanceViewModel @Inject constructor(
                         )
 
                         // jika user sedang kerja, nyalakan timer lokal
-                        if (sudahMasuk && !sudahPulang && data.jamMasuk != null) {
+                        if (data?.sudahMasuk == true && !data.sudahPulang && data.jamMasuk != null) {
                             startDurationTimer(data.jamMasuk)
                         } else {
-                            durationJob?.cancel() // stop timer jika sudah pulang/belum masuk
+                            durationJob?.cancel()
                         }
                     }
                 }
@@ -301,6 +312,10 @@ class AttendanceViewModel @Inject constructor(
                 isLoadingLocation = true,
                 error = null
             )
+
+            if(isCheckInTarget) {
+                uploadStatus = UploadStatus()
+            }
 
             // cek status presensi
             launch {
@@ -397,13 +412,11 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    fun setPendingReport(pemasukan: String, pengeluaran: String, deposits: List<DepositItemDto>) {
-        val cleanPemasukan = pemasukan.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L
-        val cleanPengeluaran = pengeluaran.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L
-
-        pendingReportData = PendingReportData(
-            pemasukan = cleanPemasukan,
-            pengeluaran = cleanPengeluaran,
+    // simpen draft dailyreport
+    fun updateReportDraft(pemasukan: String, pengeluaran: String, deposits: List<DepositDraftItem>) {
+        _reportDraft.value = ReportDraft(
+            pemasukan = pemasukan,
+            pengeluaran = pengeluaran,
             deposits = deposits
         )
     }
@@ -415,36 +428,58 @@ class AttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
 
-            if (!isCheckIn && pendingReportData != null) {
-                val report = pendingReportData!!
-                var isReportFailed = false
+            if (!isCheckIn) {
+                val report = _reportDraft.value
+                val cleanPemasukan = report.pemasukan.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L
+                val cleanPengeluaran = report.pengeluaran.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L
 
-                // kirim cashflow
-                val cashflowReq = CashflowRequest(report.pemasukan, report.pengeluaran)
-                reportRepository.sendCashflow(cashflowReq).collect { res ->
-                    if (res is Resource.Error) {
-                        _attendanceEvent.send(AttendanceEvent.Error("Gagal kirim keuangan: ${res.message}"))
-                        isReportFailed = true
-                    }
-                }
-                if (isReportFailed) {
-                    _isLoading.value = false
-                    return@launch
-                }
+                if (!uploadStatus.isCashflowSent) {
+                    var isCashflowFailed = false
+                    val cashflowReq = CashflowRequest(cleanPemasukan, cleanPengeluaran)
 
-                // kirim deposit
-                if (report.deposits.isNotEmpty()) {
-                    val depositReq = DepositRequest(report.deposits)
-                    reportRepository.sendDeposits(depositReq).collect { res ->
+                    reportRepository.sendCashflow(cashflowReq).collect { res ->
                         if (res is Resource.Error) {
-                            _attendanceEvent.send(AttendanceEvent.Error("Gagal kirim setoran: ${res.message}"))
-                            isReportFailed = true
+                            _attendanceEvent.send(AttendanceEvent.Error("Gagal kirim keuangan: ${res.message}. Silakan coba lagi."))
+                            isCashflowFailed = true
+                        } else if (res is Resource.Success) {
+                            uploadStatus.isCashflowSent = true
                         }
                     }
+                    if (isCashflowFailed) {
+                        _isLoading.value = false
+                        return@launch
+                    }
                 }
-                if (isReportFailed) {
-                    _isLoading.value = false
-                    return@launch
+
+                if (!uploadStatus.isDepositSent) {
+                    val validDeposits = report.deposits.filter {
+                        it.name.isNotBlank() && it.amount.isNotBlank()
+                    }.map { item ->
+                        DepositItemDto(
+                            memberName = item.name,
+                            type = if (item.isSimpanan) "simpanan" else "angsuran",
+                            amount = item.amount.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L
+                        )
+                    }
+
+                    if (validDeposits.isNotEmpty()) {
+                        var isDepositFailed = false
+                        val depositReq = DepositRequest(validDeposits)
+                        reportRepository.sendDeposits(depositReq).collect { res ->
+                            if (res is Resource.Error) {
+                                _attendanceEvent.send(AttendanceEvent.Error("Gagal kirim setoran: ${res.message}. Keuangan tersimpan, coba lagi untuk deposit & presensi."))
+                                isDepositFailed = true
+                            } else if (res is Resource.Success) {
+                                uploadStatus.isDepositSent = true
+                            }
+                        }
+                        if (isDepositFailed) {
+                            _isLoading.value = false
+                            return@launch
+                        }
+                    } else {
+                        uploadStatus.isDepositSent = true
+                    }
                 }
             }
 
@@ -460,14 +495,24 @@ class AttendanceViewModel @Inject constructor(
                     is Resource.Success -> {
                         val data = result.data
                         val type = if (isCheckIn) "Masuk" else "Pulang"
-                        val msg = "Berhasil $type pukul ${data?.time} (Jarak: ${data?.distance}m)"
-                        pendingReportData = null
+                        val msg = "Berhasil $type pukul ${data?.time}"
+
+                        // reset status draft & upload flag setelah sukses total
+                        if(!isCheckIn) {
+                            uploadStatus = UploadStatus()
+                            _reportDraft.value = ReportDraft()
+                        }
 
                         _attendanceEvent.send(AttendanceEvent.Success(msg))
                         loadHomeData(isRefresh = true)
                     }
                     is Resource.Error -> {
-                        _attendanceEvent.send(AttendanceEvent.Error(result.message ?: "Gagal presensi"))
+                        val errorMsg = if (!isCheckIn && uploadStatus.isCashflowSent) {
+                            "Laporan Keuangan MASUK, tapi Presensi GAGAL: ${result.message}. Silakan tekan tombol Presensi lagi."
+                        } else {
+                            result.message ?: "Gagal presensi"
+                        }
+                        _attendanceEvent.send(AttendanceEvent.Error(errorMsg))
                     }
                     else -> {}
                 }

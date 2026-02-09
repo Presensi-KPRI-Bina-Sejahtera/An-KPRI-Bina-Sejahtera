@@ -1,5 +1,6 @@
 package com.kpri.binasejahtera.ui.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,9 +22,7 @@ import androidx.navigation.navArgument
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import com.google.gson.Gson
 import com.kpri.binasejahtera.R
-import com.kpri.binasejahtera.data.remote.dto.DepositItemDto
 import com.kpri.binasejahtera.ui.components.KpriDialog
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
@@ -52,7 +51,6 @@ fun AppNavGraph(
         // --- Login ---
         composable(Screen.Login.route) {
             val viewModel: AuthViewModel = hiltViewModel()
-            val state by viewModel.isLoading.collectAsState()
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
             val credentialManager = remember { CredentialManager.create(context) }
@@ -125,7 +123,7 @@ fun AppNavGraph(
 
         // main route sekarang (digabung semua)
         composable(Screen.Home.route) {
-            val viewModel: AuthViewModel = hiltViewModel()
+            val authViewModel: AuthViewModel = hiltViewModel()
             val profileViewModel: ProfileViewModel = hiltViewModel()
             val profileState by profileViewModel.profileState.collectAsState()
 
@@ -136,13 +134,10 @@ fun AppNavGraph(
                         "attendance_out" -> navController.navigate(Screen.DailyReport.route)
                         "personal_info" -> navController.navigate(Screen.EditProfile.route)
                         "change_password" -> navController.navigate(Screen.ChangePassword.route)
-                        else -> {
-                            // route home, profile, dll akan ditangani di MainContainerScreen/internal pager
-                        }
                     }
                 },
                 onLogout = {
-                    viewModel.logout()
+                    authViewModel.logout()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0)
                     }
@@ -153,62 +148,37 @@ fun AppNavGraph(
 
         // --- Daily Report (report sebelum pulang) ---
         composable(Screen.DailyReport.route) {
+            val context = LocalContext.current
+            val sharedViewModel: AttendanceViewModel = hiltViewModel(context as ComponentActivity)
 
             DailyReportScreen(
+                viewModel = sharedViewModel, // Pass VM yang sama
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateNext = { pemasukan, pengeluaran, deposits ->
-                    val gson = Gson()
-                    val depositsJson = gson.toJson(deposits)
-
-                    val encodedDeposits = java.net.URLEncoder.encode(depositsJson, "UTF-8")
-
-                    navController.navigate(
-                        "presence_confirmation/false?pemasukan=$pemasukan&pengeluaran=$pengeluaran&deposits=$encodedDeposits"
-                    )
+                onNavigateNext = {
+                    navController.navigate("presence_confirmation/false")
                 }
             )
         }
 
         // --- Presence Confirmation ---
         composable(
-            route = "presence_confirmation/{status}?pemasukan={pemasukan}&pengeluaran={pengeluaran}&deposits={deposits}",
-            arguments = listOf(
-                navArgument("status") { type = NavType.BoolType },
-                navArgument("pemasukan") { type = NavType.StringType; nullable = true },
-                navArgument("pengeluaran") { type = NavType.StringType; nullable = true },
-                navArgument("deposits") { type = NavType.StringType; nullable = true }
-            )
+            route = "presence_confirmation/{status}",
+            arguments = listOf(navArgument("status") { type = NavType.BoolType })
         ) { backStackEntry ->
             val isCheckIn = backStackEntry.arguments?.getBoolean("status") ?: true
 
-            val pemasukan = backStackEntry.arguments?.getString("pemasukan")
-            val pengeluaran = backStackEntry.arguments?.getString("pengeluaran")
-            val depositsRaw = backStackEntry.arguments?.getString("deposits")
+            val context = LocalContext.current
+            val sharedViewModel: AttendanceViewModel = hiltViewModel(context as ComponentActivity)
 
-            val viewModel: AttendanceViewModel = hiltViewModel()
-            val confirmState by viewModel.confirmationState.collectAsState()
-
-            // state untuk nyimpen pesan sukses
+            val confirmState by sharedViewModel.confirmationState.collectAsState()
             var successDialogMessage by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(Unit) {
-                if (!isCheckIn && pemasukan != null && pengeluaran != null) {
-                    try {
-                        val gson = Gson()
-                        val depositsList = if (depositsRaw != null) {
-                            gson.fromJson(depositsRaw, Array<DepositItemDto>::class.java).toList()
-                        } else emptyList()
-
-                        viewModel.setPendingReport(pemasukan, pengeluaran, depositsList)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-                viewModel.initPresenceConfirmation(isCheckIn)
+                sharedViewModel.initPresenceConfirmation(isCheckIn)
             }
 
             LaunchedEffect(true) {
-                viewModel.attendanceEvent.collect { event ->
+                sharedViewModel.attendanceEvent.collect { event ->
                     when (event) {
                         is AttendanceViewModel.AttendanceEvent.Success -> {
                             successDialogMessage = event.message
@@ -241,8 +211,8 @@ fun AppNavGraph(
                 isCheckIn = isCheckIn,
                 state = confirmState,
                 onBackClick = { navController.popBackStack() },
-                onConfirmClick = { viewModel.performAttendance(isCheckIn) },
-                onUpdateLocation = { viewModel.refreshUserLocation() }
+                onConfirmClick = { sharedViewModel.performAttendance(isCheckIn) },
+                onUpdateLocation = { sharedViewModel.refreshUserLocation() }
             )
         }
 

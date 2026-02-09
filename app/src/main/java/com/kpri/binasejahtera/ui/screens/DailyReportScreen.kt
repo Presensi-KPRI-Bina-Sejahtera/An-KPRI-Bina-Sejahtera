@@ -27,6 +27,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,41 +42,50 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kpri.binasejahtera.R
-import com.kpri.binasejahtera.data.remote.dto.DepositItemDto
 import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
 import com.kpri.binasejahtera.ui.components.KpriTextField
 import com.kpri.binasejahtera.ui.components.KpriTopBar
-import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
+import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.theme.AppBackground
 import com.kpri.binasejahtera.ui.theme.ErrorRed
 import com.kpri.binasejahtera.ui.theme.InfoBlue
-import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.SuccessGreen
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
-
-data class DepositUiState(
-    val id: Long = System.currentTimeMillis(),
-    var name: String = "",
-    var amount: String = "",
-    var isSimpanan: Boolean = true
-)
+import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
+import com.kpri.binasejahtera.ui.viewmodel.DepositDraftItem
 
 @Composable
 fun DailyReportScreen(
     onNavigateBack: () -> Unit,
-    onNavigateNext: (pemasukan: String, pengeluaran: String, deposits: List<DepositItemDto>) -> Unit
+    onNavigateNext: () -> Unit,
+    viewModel: AttendanceViewModel
 ) {
-    var pemasukan by remember { mutableStateOf("") }
-    var pengeluaran by remember { mutableStateOf("") }
+    val draftState by viewModel.reportDraft.collectAsState()
 
-    val depositList = remember { mutableStateListOf(DepositUiState()) }
+    var pemasukan by remember { mutableStateOf(draftState.pemasukan) }
+    var pengeluaran by remember { mutableStateOf(draftState.pengeluaran) }
+
+    val depositList = remember {
+        mutableStateListOf<DepositDraftItem>().apply {
+            if (draftState.deposits.isNotEmpty()) {
+                addAll(draftState.deposits)
+            } else {
+                add(DepositDraftItem(id = System.currentTimeMillis()))
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.updateReportDraft(pemasukan, pengeluaran, depositList.toList())
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -166,7 +177,7 @@ fun DailyReportScreen(
             KpriPrimaryButton(
                 text = "Tambah Setoran Lain",
                 iconId = R.drawable.ic_plus,
-                onClick = { depositList.add(DepositUiState(id = System.currentTimeMillis())) },
+                onClick = { depositList.add(DepositDraftItem(id = System.currentTimeMillis())) },
                 containerColor = Color.Transparent,
                 contentColor = TertiaryGray,
                 isIconStart = true,
@@ -181,30 +192,29 @@ fun DailyReportScreen(
                 text = "Lanjut ke Presensi Pulang",
                 iconId = R.drawable.ic_arrow_go,
                 onClick = {
-                    // validasi pengisian keuangan dan deposit
+                    // pemasukan/pengeluaran harus diisi, tapi boleh nol.
                     if (pemasukan.isBlank() || pengeluaran.isBlank()) {
-                        ToastManager.show("Harap isi Pemasukan dan Pengeluaran Toko", ToastType.ERROR)
+                        ToastManager.show("Harap isi Pemasukan dan Pengeluaran (Isi 0 jika tidak ada)", ToastType.ERROR)
                         return@KpriPrimaryButton
                     }
 
-                    val isDepositsValid = depositList.all { it.name.isNotBlank() && it.amount.isNotBlank() }
-                    if (!isDepositsValid) {
-                        ToastManager.show("Harap lengkapi data Setoran Anggota", ToastType.ERROR)
+                    val hasInvalidInput = depositList.any { item ->
+                        val isNameFilled = item.name.isNotBlank()
+                        val isAmountFilled = item.amount.isNotBlank()
+
+                        // ini bakalan error klo nama diisi tp jumlah kosong (dan sebaliknya). tapi deposit ttp opsional
+                        (isNameFilled && !isAmountFilled) || (!isNameFilled && isAmountFilled)
+                    }
+
+                    if (hasInvalidInput) {
+                        ToastManager.show("Data Setoran tidak lengkap. Harap isi Nama & Jumlah, atau kosongkan keduanya.", ToastType.ERROR)
                         return@KpriPrimaryButton
                     }
 
-                    val dtoList = depositList.map { item ->
-                        DepositItemDto(
-                            memberName = item.name,
-                            type = if (item.isSimpanan) "simpanan" else "angsuran",
-                            amount = item.amount
-                                .replace(Regex("[^0-9]"), "")
-                                .toLongOrNull() ?: 0L
-                        )
-                    }
+                    // simpen datanya dulu sblm navigasi
+                    viewModel.updateReportDraft(pemasukan, pengeluaran, depositList.toList())
 
-                    // kirim data ke navigasi (ke api nya nnti dulu biar klo ada apa")
-                    onNavigateNext(pemasukan, pengeluaran, dtoList)
+                    onNavigateNext()
                 },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -216,7 +226,7 @@ fun DailyReportScreen(
 
 @Composable
 fun DepositCard(
-    state: DepositUiState,
+    state: DepositDraftItem,
     isExtraCard: Boolean,
     onRemove: () -> Unit,
     onNameChange: (String) -> Unit,
@@ -253,6 +263,7 @@ fun DepositCard(
                 iconId = R.drawable.ic_profile,
                 onValueChange = {
                     localName = it
+                    state.name = it
                     onNameChange(it)
                 }
             )
@@ -263,6 +274,7 @@ fun DepositCard(
                 isSimpanan = localIsSimpanan,
                 onToggle = {
                     localIsSimpanan = it
+                    state.isSimpanan = it
                     onTypeChange(it)
                 }
             )
@@ -276,6 +288,7 @@ fun DepositCard(
                 prefixText = "Rp ",
                 onValueChange = {
                     localAmount = it
+                    state.amount = it
                     onAmountChange(it)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -388,13 +401,4 @@ fun TypeButton(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun DailyReportPreview() {
-    KPRIBinaSejahteraTheme {
-        DailyReportScreen(
-            onNavigateBack = {},
-            onNavigateNext = { _, _, _ -> }
-        )
-    }
-}
+// preview ku hapus. dah malas error mulu gara-gara hilt wkwkwk
