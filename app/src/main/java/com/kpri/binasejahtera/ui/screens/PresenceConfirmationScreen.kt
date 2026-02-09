@@ -1,5 +1,10 @@
 package com.kpri.binasejahtera.ui.screens
 
+import android.app.Activity
+import android.content.IntentSender
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,11 +41,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest.Builder
+import com.google.android.gms.location.Priority
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriOsmMap
 import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
@@ -70,6 +81,41 @@ fun PresenceConfirmationScreen(
     onUpdateLocation: () -> Unit
 ) {
     val title = if (isCheckIn) "Presensi Masuk" else "Presensi Pulang"
+    val context = LocalContext.current
+
+    val settingResultRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // pas user teken yes, lgsg nyalain
+            onUpdateLocation()
+        }
+    }
+
+    // ngecek settingan gps
+    LaunchedEffect(Unit) {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
+        val builder = Builder().addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(context)
+        val task = client.checkLocationSettings(builder.build())
+
+        // klo gps ok lgsg update lokasi
+        task.addOnSuccessListener {
+            onUpdateLocation()
+        }
+
+        // gps mati, munculkan dialog
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    val intentSenderRequest = IntentSenderRequest.Builder(exception.resolution).build()
+                    settingResultRequest.launch(intentSenderRequest)
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // ignore
+                }
+            }
+        }
+    }
 
     val presenceCardShape = Shapes.medium.copy(
         bottomStart = CornerSize(0.dp),
