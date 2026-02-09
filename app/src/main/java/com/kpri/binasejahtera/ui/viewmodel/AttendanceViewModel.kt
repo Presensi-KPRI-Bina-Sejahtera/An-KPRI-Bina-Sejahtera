@@ -19,7 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -76,6 +78,9 @@ class AttendanceViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
     private val _homeState = MutableStateFlow(HomeUiState())
     val homeState = _homeState.asStateFlow()
 
@@ -85,10 +90,13 @@ class AttendanceViewModel @Inject constructor(
     private val _confirmationState = MutableStateFlow(ConfirmationUiState())
     val confirmationState = _confirmationState.asStateFlow()
 
+    // mencegah memory leak/dupe process
     private var durationJob: Job? = null
+    private var homeDataJob: Job? = null
+    private var profileJob: Job? = null
+    private var locationJob: Job? = null
 
     private var cachedOfficeLocation: OfficeResponse? = null
-
     private var pendingReportData: PendingReportData? = null
 
     init {
@@ -107,14 +115,34 @@ class AttendanceViewModel @Inject constructor(
         loadUserLocation()
     }
 
-    fun loadUserLocation() {
+    // pull to refresh dengan timout biar ngga stuck loading
+    fun refreshData() {
         viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                withTimeoutOrNull(5000) {
+                    val jobs = listOfNotNull(
+                        loadUserLocation(),
+                        loadProfile(),
+                        loadHomeData(isRefresh = true)
+                    )
+                    joinAll(*jobs.toTypedArray())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    fun loadUserLocation(): Job {
+        locationJob?.cancel()
+        locationJob = viewModelScope.launch {
             try {
                 val location = locationHelper.getCurrentLocation()
-
                 if (location != null) {
                     val address = locationHelper.getAddressName(location.latitude, location.longitude)
-
                     _homeState.value = _homeState.value.copy(
                         currentAddress = address ?: "Alamat tidak ditemukan"
                     )
@@ -129,15 +157,14 @@ class AttendanceViewModel @Inject constructor(
                 )
             }
         }
+        return locationJob!!
     }
 
     private fun updateGreetingAndDate() {
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
-
         val currentTime = hour + (minute / 60.0)
-
         val greetingText = when (currentTime) {
             in 3.0..<11.5 -> "Selamat Pagi,"
             in 11.5..<15.0 -> "Selamat Siang,"
@@ -162,8 +189,9 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    private fun loadProfile() {
-        viewModelScope.launch {
+    private fun loadProfile(): Job {
+        profileJob?.cancel()
+        profileJob = viewModelScope.launch {
             profileRepository.getProfile().collect { result ->
                 if (result is Resource.Success) {
                     val data = result.data
@@ -174,11 +202,12 @@ class AttendanceViewModel @Inject constructor(
                 }
             }
         }
+        return profileJob!!
     }
 
-    fun loadHomeData(isRefresh: Boolean = false) {
-        viewModelScope.launch {
-            // ngecek klo cache kosong baru request API
+    fun loadHomeData(isRefresh: Boolean = false): Job {
+        homeDataJob?.cancel()
+        homeDataJob = viewModelScope.launch {
             launch {
                 attendanceRepository.getOfficeLocation(forceUpdate = isRefresh).collect { result ->
                     if (result is Resource.Success) {
@@ -219,6 +248,7 @@ class AttendanceViewModel @Inject constructor(
                 }
             }
         }
+        return homeDataJob!!
     }
 
     private fun startDurationTimer(startTimeStr: String) {

@@ -24,12 +24,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,6 +68,7 @@ import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 import com.kpri.binasejahtera.ui.viewmodel.HomeUiState
 import androidx.core.net.toUri
 
+
 @Composable
 fun HomeScreen(
     onNavigate: (String) -> Unit,
@@ -71,20 +76,29 @@ fun HomeScreen(
 ) {
     val viewModel: AttendanceViewModel = hiltViewModel()
     val state by viewModel.homeState.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     HomeContent(
         state = state,
         onNavigate = onNavigate,
         onRefreshLocation = { viewModel.loadUserLocation() },
+
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            viewModel.refreshData()
+        },
         isNested = isNested
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
     state: HomeUiState,
     onNavigate: (String) -> Unit,
     onRefreshLocation: () -> Unit = {},
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
     isNested: Boolean = false
 ) {
     val context = LocalContext.current
@@ -142,181 +156,201 @@ fun HomeContent(
         containerColor = AppBackground
 
     ) { innerPadding ->
-        Column(
+
+        val pullRefreshState = rememberPullToRefreshState()
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            state = pullRefreshState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .verticalScroll(rememberScrollState())
+                .padding(innerPadding),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    isRefreshing = isRefreshing,
+                    state = pullRefreshState,
+                    color = PrimaryBlack,
+                    containerColor = Color.White.copy(alpha = 0.95f)
+                )
+            }
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // tanggal
-                Card(
-                    shape = Shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(12.dp, Shapes.medium, spotColor = Color.Black.copy(0.5f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // tanggal
+                    Card(
+                        shape = Shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(12.dp, Shapes.medium, spotColor = Color.Black.copy(0.5f))
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_calendar),
-                            contentDescription = null,
-                            tint = PrimaryBlack,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = state.currentDate,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TertiaryGray
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // shift & waktu
-                Card(
-                    shape = Shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(12.dp, Shapes.medium, spotColor = Color.Black.copy(0.5f))
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround,
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TimeColumn(
-                                label = "Masuk",
-                                time = state.checkInTime,
-                                isPlaceholder = state.checkInTime == "--:--:--"
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_calendar),
+                                contentDescription = null,
+                                tint = PrimaryBlack,
+                                modifier = Modifier.size(16.dp)
                             )
-
-                            VerticalDivider(
-                                modifier = Modifier.height(40.dp).width(1.dp),
-                                color = TertiaryGray.copy(alpha = 0.3f)
-                            )
-
-                            TimeColumn(
-                                label = "Jam Pulang",
-                                time = state.checkOutTime,
-                                isPlaceholder = state.checkOutTime == "--:--:--"
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = state.currentDate,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TertiaryGray
                             )
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                        // durasi kerja
-                        Surface(
-                            color = TertiaryGray.copy(alpha = 0.05f),
-                            shape = Shapes.medium,
-                            border = BorderStroke(1.dp, TertiaryGray.copy(alpha = 0.1f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                    // shift & waktu
+                    Card(
+                        shape = Shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(12.dp, Shapes.medium, spotColor = Color.Black.copy(0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "Durasi Kerja",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = TertiaryGray
+                                TimeColumn(
+                                    label = "Masuk",
+                                    time = state.checkInTime,
+                                    isPlaceholder = state.checkInTime == "--:--:--"
                                 )
-                                Spacer(modifier = Modifier.padding(4.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_clock),
-                                        contentDescription = null,
-                                        tint = InfoBlue,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
+
+                                VerticalDivider(
+                                    modifier = Modifier.height(40.dp).width(1.dp),
+                                    color = TertiaryGray.copy(alpha = 0.3f)
+                                )
+
+                                TimeColumn(
+                                    label = "Jam Pulang",
+                                    time = state.checkOutTime,
+                                    isPlaceholder = state.checkOutTime == "--:--:--"
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // durasi kerja
+                            Surface(
+                                color = TertiaryGray.copy(alpha = 0.05f),
+                                shape = Shapes.medium,
+                                border = BorderStroke(1.dp, TertiaryGray.copy(alpha = 0.1f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
                                     Text(
-                                        text = state.workDuration,
+                                        text = "Durasi Kerja",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = InfoBlue
+                                        color = TertiaryGray
                                     )
+                                    Spacer(modifier = Modifier.padding(4.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_clock),
+                                            contentDescription = null,
+                                            tint = InfoBlue,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = state.workDuration,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = InfoBlue
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // tombol presensi (quick action button)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    DashboardActionCard(
-                        title = "Presensi Masuk",
-                        subtitle = "Datang & mulai kerja",
-                        iconId = R.drawable.ic_in,
-                        colorTheme = SuccessGreen,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            if (state.isCheckIn || state.isCheckOut) {
-                                ToastManager.show("Anda sudah presensi masuk hari ini", ToastType.ERROR)
-                            } else {
-                                onNavigate("attendance_in")
+                    // tombol presensi (quick action button)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        DashboardActionCard(
+                            title = "Presensi Masuk",
+                            subtitle = "Datang & mulai kerja",
+                            iconId = R.drawable.ic_in,
+                            colorTheme = SuccessGreen,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (state.isCheckIn || state.isCheckOut) {
+                                    ToastManager.show("Anda sudah presensi masuk hari ini", ToastType.ERROR)
+                                } else {
+                                    onNavigate("attendance_in")
+                                }
                             }
-                        }
-                    )
+                        )
 
-                    DashboardActionCard(
-                        title = "Presensi Pulang",
-                        subtitle = "Laporan harian & pulang",
-                        iconId = R.drawable.ic_out,
-                        colorTheme = ErrorRed,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            if (state.isCheckOut) {
-                                ToastManager.show("Anda sudah presensi pulang hari ini", ToastType.ERROR)
-                            } else if (!state.isCheckIn) {
-                                ToastManager.show("Anda belum melakukan Presensi Masuk", ToastType.ERROR)
-                            } else {
-                                onNavigate("attendance_out")
+                        DashboardActionCard(
+                            title = "Presensi Pulang",
+                            subtitle = "Laporan harian & pulang",
+                            iconId = R.drawable.ic_out,
+                            colorTheme = ErrorRed,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (state.isCheckOut) {
+                                    ToastManager.show("Anda sudah presensi pulang hari ini", ToastType.ERROR)
+                                } else if (!state.isCheckIn) {
+                                    ToastManager.show("Anda belum melakukan Presensi Masuk", ToastType.ERROR)
+                                } else {
+                                    onNavigate("attendance_out")
+                                }
                             }
-                        }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // info lokasi
-                KpriInfoCard(
-                    title = "Lokasi Anda",
-                    value = state.currentAddress,
-                    iconId = R.drawable.ic_map
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                KpriInfoCard(
-                    title = "Berangkat Ke Tempat Kerja",
-                    value = state.officeAddress,
-                    iconId = R.drawable.ic_nav_arrow,
-                    onClick = {
-                        val mapUrl = state.officeMapsUrl
-                            ?: "geo:0,0?q=${Uri.encode(state.officeAddress)}"
-
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW, mapUrl.toUri())
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                        )
                     }
-                )
 
-                Spacer(modifier = Modifier.height(160.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // info lokasi
+                    KpriInfoCard(
+                        title = "Lokasi Anda",
+                        value = state.currentAddress,
+                        iconId = R.drawable.ic_map
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    KpriInfoCard(
+                        title = "Berangkat Ke Tempat Kerja",
+                        value = state.officeAddress,
+                        iconId = R.drawable.ic_nav_arrow,
+                        onClick = {
+                            val mapUrl = state.officeMapsUrl
+                                ?: "geo:0,0?q=${Uri.encode(state.officeAddress)}"
+
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, mapUrl.toUri())
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(160.dp))
+                }
             }
         }
     }
@@ -419,14 +453,22 @@ fun HomeScreenPreview() {
     KPRIBinaSejahteraTheme {
         HomeContent(
             state = HomeUiState(
-                userName = "Endra Zhafir",
-                currentDate = "Sabtu, 08 Februari 2026",
-                checkInTime = "07:45:00",
-                workDuration = "4 jam 30 menit",
-                officeAddress = "Jl. Jendral Sudirman No. 1",
-                currentAddress = "Rumah"
+                greeting = "Selamat Malam",
+                userName = "EmployeeOne",
+                currentDate = "Senin, 09 Februari 2026",
+                checkInTime = "18:02:54",
+                checkOutTime = "--:--:--",
+                workDuration = "0 jam 57 menit",
+                officeAddress = "Gang Kinanthar, Pandeyan, Umbulharjo, Kota Yogyakarta",
+                currentAddress = "Rumah",
+                isCheckIn = true,
+                isCheckOut = false
             ),
-            onNavigate = {}
+            onNavigate = {},
+            onRefreshLocation = {},
+            isRefreshing = false,
+            onRefresh = {},
+            isNested = false
         )
     }
 }
