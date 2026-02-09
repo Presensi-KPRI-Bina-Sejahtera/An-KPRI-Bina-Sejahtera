@@ -43,9 +43,9 @@ fun ProfileScreen(
 
     if (showLogoutDialog) {
         KpriDialog(
-            title = "Konfirmasi Keluar",
-            message = "Apakah Anda yakin ingin keluar dari aplikasi? Anda harus login kembali untuk mengakses akun Anda.",
-            confirmText = "Ya, Keluar",
+            title = "Konfirmasi Logout",
+            message = "Apakah Anda yakin ingin logout dari aplikasi?",
+            confirmText = "Ya, Logout",
             secondaryButtonText = "Batal",
             iconId = R.drawable.ic_warn,
             iconContainerColor = ErrorRed,
@@ -117,7 +117,7 @@ fun ProfileScreen(
 
             // tombol keluar
             KpriActionCard(
-                title = "Keluar Aplikasi",
+                title = "Logout",
                 iconId = R.drawable.ic_out,
                 isDestructive = true,
                 onClick = { showLogoutDialog = true }

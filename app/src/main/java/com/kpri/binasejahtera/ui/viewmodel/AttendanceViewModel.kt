@@ -103,7 +103,7 @@ class AttendanceViewModel @Inject constructor(
         )
         updateGreetingAndDate()
         loadProfile()
-        loadDashboardData()
+        loadHomeData()
         loadUserLocation()
     }
 
@@ -176,7 +176,7 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    fun loadDashboardData() {
+    fun loadHomeData() {
         viewModelScope.launch {
             // ngecek klo cache kosong baru request API
             if (cachedOfficeLocation == null) {
@@ -432,7 +432,7 @@ class AttendanceViewModel @Inject constructor(
                         pendingReportData = null
 
                         _attendanceEvent.send(AttendanceEvent.Success(msg))
-                        loadDashboardData()
+                        loadHomeData()
                     }
                     is Resource.Error -> {
                         _attendanceEvent.send(AttendanceEvent.Error(result.message ?: "Gagal presensi"))

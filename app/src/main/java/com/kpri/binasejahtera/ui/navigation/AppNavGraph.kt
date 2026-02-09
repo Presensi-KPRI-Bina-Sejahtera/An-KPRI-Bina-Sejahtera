@@ -124,7 +124,7 @@ fun AppNavGraph(
         }
 
         // main route sekarang (digabung semua)
-        composable("dashboard") {
+        composable(Screen.Home.route) {
             val viewModel: AuthViewModel = hiltViewModel()
             val profileViewModel: ProfileViewModel = hiltViewModel()
             val profileState by profileViewModel.profileState.collectAsState()

@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                 Box(modifier = Modifier.fillMaxSize()) {
                     // render main page dibelakang splashscreen
                     if (isUserLoggedIn != null) {
-                        val startDest = if (isUserLoggedIn == true) "dashboard" else Screen.Login.route
+                        val startDest = if (isUserLoggedIn == true) Screen.Home.route else Screen.Login.route
 
                         AppNavGraph(
                             navController = navController,
