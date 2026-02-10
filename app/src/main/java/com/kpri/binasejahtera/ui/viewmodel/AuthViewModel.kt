@@ -86,7 +86,11 @@ class AuthViewModel @Inject constructor(
 
     fun changePassword(current: String, new: String, confirm: String) {
         viewModelScope.launch {
-            repository.changePassword(ChangePasswordRequest(current, new, confirm)).collect { result ->
+            val finalCurrentPassword = current.ifBlank { null }
+
+            repository.changePassword(
+                ChangePasswordRequest(finalCurrentPassword, new, confirm)
+            ).collect { result ->
                 when (result) {
                     is Resource.Loading -> _isLoading.value = true
                     is Resource.Success -> {

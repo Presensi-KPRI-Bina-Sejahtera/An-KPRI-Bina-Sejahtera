@@ -36,18 +36,22 @@ import com.kpri.binasejahtera.ui.theme.Shapes
 
 @Composable
 fun ChangePasswordScreen(
+    hasPassword: Boolean,
     onNavigateBack: () -> Unit,
     onSavePassword: (current: String, new: String, confirm: String) -> Unit
 ) {
+    val isFirstTime = !hasPassword
     var currentPass by remember { mutableStateOf("") }
     var newPass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
+    val screenTitle = if (isFirstTime) "Buat Kata Sandi" else "Ubah Kata Sandi"
+    val buttonText = if (isFirstTime) "Simpan Password" else "Update Password"
 
     Scaffold(
         topBar = {
             KpriTopBar(
                 config = TopBarConfig.Navigation(
-                    title = "Atur Kata Sandi",
+                    title = screenTitle,
                     onBackClick = onNavigateBack
                 )
             )
@@ -83,19 +87,21 @@ fun ChangePasswordScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // input form
-            KpriTextField(
-                value = currentPass,
-                label = "Password Saat Ini",
-                placeholder = "Masukkan password lama",
-                iconId = R.drawable.ic_lock,
-                isPassword = true,
-                onValueChange = { currentPass = it },
-                backgroundColor = Color.White,
-                hasShadow = true
-            )
+            // input form dengan logic baru
+            if (!isFirstTime) {
+                KpriTextField(
+                    value = currentPass,
+                    label = "Password Saat Ini",
+                    placeholder = "Masukkan password lama",
+                    iconId = R.drawable.ic_lock,
+                    isPassword = true,
+                    onValueChange = { currentPass = it },
+                    backgroundColor = Color.White,
+                    hasShadow = true
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             KpriTextField(
                 value = newPass,
@@ -125,9 +131,10 @@ fun ChangePasswordScreen(
 
             // tombol update
             KpriPrimaryButton(
-                text = "Update Password",
+                text = buttonText,
                 onClick = {
-                    onSavePassword(currentPass, newPass, confirmPass)
+                    val finalCurrentPass = if (isFirstTime) "" else currentPass
+                    onSavePassword(finalCurrentPass, newPass, confirmPass)
                 },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -137,15 +144,26 @@ fun ChangePasswordScreen(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(name = "1. User Lama (Bisa Ganti Password)", showBackground = true, showSystemUi = true)
 @Composable
-fun ChangePasswordPreview() {
+fun ChangePasswordOldUserPreview() {
     KPRIBinaSejahteraTheme {
         ChangePasswordScreen(
+            hasPassword = true,
             onNavigateBack = {},
-            onSavePassword = { current, new, confirm ->
-                // simulasi callback, kosongin aja
-            }
+            onSavePassword = { _, _, _ -> }
+        )
+    }
+}
+
+@Preview(name = "2. User Baru (Harus Buat Password)", showBackground = true, showSystemUi = true)
+@Composable
+fun ChangePasswordNewUserPreview() {
+    KPRIBinaSejahteraTheme {
+        ChangePasswordScreen(
+            hasPassword = false,
+            onNavigateBack = {},
+            onSavePassword = { _, _, _ -> }
         )
     }
 }

@@ -93,10 +93,12 @@ fun ProfileScreen(
 
             // menu settings
             KpriActionCard(
-                title = "Atur Kata Sandi",
-                subtitle = "Ubah Password",
+                title = if (state?.hasPassword == true) "Ubah Kata Sandi" else "Buat Kata Sandi",
+                subtitle = "Atur keamanan akun",
                 iconId = R.drawable.ic_settings,
-                onClick = { onNavigate("change_password") }
+                onClick = {
+                    onNavigate("change_password")
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -121,7 +121,7 @@ fun AppNavGraph(
             }
         }
 
-        // main route sekarang (digabung semua)
+        // --- Main Route (Home) ---
         composable(Screen.Home.route) {
             val authViewModel: AuthViewModel = hiltViewModel()
             val profileViewModel: ProfileViewModel = hiltViewModel()
@@ -133,7 +133,10 @@ fun AppNavGraph(
                         "attendance_in" -> navController.navigate("presence_confirmation/true")
                         "attendance_out" -> navController.navigate(Screen.DailyReport.route)
                         "personal_info" -> navController.navigate(Screen.EditProfile.route)
-                        "change_password" -> navController.navigate(Screen.ChangePassword.route)
+                        "change_password" -> {
+                            val hasPass = profileState?.hasPassword ?: false
+                            navController.navigate("change_password/$hasPass")
+                        }
                     }
                 },
                 onLogout = {
@@ -248,7 +251,11 @@ fun AppNavGraph(
         }
 
         // --- Change Password ---
-        composable(Screen.ChangePassword.route) {
+        composable(
+            route = "change_password/{hasPassword}",
+            arguments = listOf(navArgument("hasPassword") { type = NavType.BoolType })
+        ) { backStackEntry ->
+            val hasPass = backStackEntry.arguments?.getBoolean("hasPassword") ?: false
             val viewModel: AuthViewModel = hiltViewModel()
 
             LaunchedEffect(true) {
@@ -266,6 +273,7 @@ fun AppNavGraph(
             }
 
             ChangePasswordScreen(
+                hasPassword = hasPass,
                 onNavigateBack = { navController.popBackStack() },
                 onSavePassword = { current, new, confirm ->
                     viewModel.changePassword(current, new, confirm)

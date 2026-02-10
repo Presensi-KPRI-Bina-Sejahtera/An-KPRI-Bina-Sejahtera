@@ -56,7 +56,7 @@ data class GoogleLoginRequest(
 // change password
 data class ChangePasswordRequest(
     @SerializedName("current_password")
-    val currentPass: String,
+    val currentPass: String?,
 
     @SerializedName("password")
     val newPass: String,
