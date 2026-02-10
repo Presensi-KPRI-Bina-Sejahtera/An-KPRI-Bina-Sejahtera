@@ -127,6 +127,19 @@ fun AppNavGraph(
             val profileViewModel: ProfileViewModel = hiltViewModel()
             val profileState by profileViewModel.profileState.collectAsState()
 
+            val currentBackStack = navController.currentBackStackEntry
+            val savedStateHandle = currentBackStack?.savedStateHandle
+
+            val shouldRefresh by savedStateHandle?.getStateFlow("refresh_profile", false)!!.collectAsState()
+
+            LaunchedEffect(shouldRefresh) {
+                if (shouldRefresh) {
+                    profileViewModel.loadProfile(forceUpdate = true)
+
+                    savedStateHandle.remove<Boolean>("refresh_profile")
+                }
+            }
+
             MainContainerScreen(
                 onNavigate = { route ->
                     when(route) {
@@ -229,6 +242,11 @@ fun AppNavGraph(
                     when(event) {
                         is ProfileViewModel.ProfileEvent.Success -> {
                             ToastManager.show(event.message, ToastType.SUCCESS)
+
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("refresh_profile", true)
+
                             navController.popBackStack()
                         }
                         is ProfileViewModel.ProfileEvent.Error -> {
@@ -263,6 +281,11 @@ fun AppNavGraph(
                     when(event) {
                         is AuthViewModel.AuthEvent.Success -> {
                             ToastManager.show(event.message, ToastType.SUCCESS)
+
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("refresh_profile", true)
+
                             navController.popBackStack()
                         }
                         is AuthViewModel.AuthEvent.Error -> {

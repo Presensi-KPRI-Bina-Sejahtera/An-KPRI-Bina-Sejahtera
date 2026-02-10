@@ -33,9 +33,9 @@ class ProfileViewModel @Inject constructor(
         loadProfile()
     }
 
-    fun loadProfile() {
+    fun loadProfile(forceUpdate: Boolean = false) {
         viewModelScope.launch {
-            repository.getProfile().collect { result ->
+            repository.getProfile(forceUpdate).collect { result ->
                 when (result) {
                     is Resource.Loading -> _isLoading.value = true
                     is Resource.Success -> {
