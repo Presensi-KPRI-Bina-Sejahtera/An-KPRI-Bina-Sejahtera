@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -409,6 +410,51 @@ class AttendanceViewModel @Inject constructor(
                 isLoadingLocation = false,
                 error = "Gagal mendapatkan lokasi GPS. Pastikan GPS aktif."
             )
+        }
+    }
+
+    // refresh data untuk presensi (untuk tombol refresh)
+    fun refreshPresenceData(isCheckIn: Boolean) {
+        viewModelScope.launch {
+            _confirmationState.update { it.copy(
+                isLoadingLocation = true,
+                officeName = "Memuat data...",
+                officeAddress = "Sedang memperbarui info...",
+                error = null
+            )}
+
+            val statusJob = launch {
+                attendanceRepository.getAttendanceStatus(forceUpdate = true).collect { result ->
+                    if (result is Resource.Success) {
+                        val data = result.data
+                        val alreadyDone = if (isCheckIn) data?.sudahMasuk == true else data?.sudahPulang == true
+                        _confirmationState.update { it.copy(isAlreadyDone = alreadyDone) }
+                    }
+                }
+            }
+
+            val officeJob = launch {
+                attendanceRepository.getOfficeLocation(forceUpdate = true).collect { result ->
+                    if (result is Resource.Success && result.data != null) {
+                        val office = result.data
+                        cachedOfficeLocation = office
+
+                        _confirmationState.update { it.copy(
+                            officeLat = office.latitude.toDoubleOrNull() ?: 0.0,
+                            officeLong = office.longitude.toDoubleOrNull() ?: 0.0,
+                            officeName = office.name,
+                            officeAddress = office.address,
+                            maxRadius = office.maxDistance.toDouble()
+                        )}
+                    } else if (result is Resource.Error) {
+                        _confirmationState.update { it.copy(error = result.message) }
+                    }
+                }
+            }
+
+            joinAll(statusJob, officeJob)
+
+            getUserLocation()
         }
     }
 

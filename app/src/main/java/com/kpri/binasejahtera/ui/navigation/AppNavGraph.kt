@@ -235,7 +235,11 @@ fun AppNavGraph(
                 state = confirmState,
                 onBackClick = { navController.popBackStack() },
                 onConfirmClick = { sharedViewModel.performAttendance(isCheckIn) },
-                onUpdateLocation = { sharedViewModel.refreshUserLocation() }
+                onUpdateLocation = { sharedViewModel.refreshUserLocation() },
+
+                onRefresh = {
+                    sharedViewModel.refreshPresenceData(isCheckIn)
+                }
             )
         }
 

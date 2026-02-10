@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.android.gms.common.api.ResolvableApiException
@@ -60,7 +59,6 @@ import com.kpri.binasejahtera.ui.theme.ErrorContainer
 import com.kpri.binasejahtera.ui.theme.ErrorRed
 import com.kpri.binasejahtera.ui.theme.InfoGreen
 import com.kpri.binasejahtera.ui.theme.InfoRed
-import com.kpri.binasejahtera.ui.theme.KPRIBinaSejahteraTheme
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.SuccessContainer
@@ -78,7 +76,8 @@ fun PresenceConfirmationScreen(
     state: ConfirmationUiState,
     onBackClick: () -> Unit,
     onConfirmClick: () -> Unit,
-    onUpdateLocation: () -> Unit
+    onUpdateLocation: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     val title = if (isCheckIn) "Presensi Masuk" else "Presensi Pulang"
     val context = LocalContext.current
@@ -165,6 +164,7 @@ fun PresenceConfirmationScreen(
         FloatingTopBar(
             title = title,
             onBackClick = onBackClick,
+            onRefreshClick = onRefresh,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .statusBarsPadding()
@@ -230,10 +230,13 @@ fun PresenceConfirmationScreen(
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        val radiusText = if (state.isLoadingLocation) "..." else "${state.maxRadius.toInt()} Meter"
+                        val distanceText = if (state.isLoadingLocation) "Memuat..." else "${state.currentDistance.toInt()} Meter"
+
                         // radius info
                         StatCard(
                             label = "Radius",
-                            value = "${state.maxRadius.toInt()} Meter",
+                            value = radiusText,
                             backgroundColor = AppBackground.copy(alpha = 0.25f),
                             borderStroke = BorderStroke(1.dp, TertiaryGray.copy(alpha = 0.3f)),
                             contentColor = PrimaryBlack,
@@ -241,13 +244,14 @@ fun PresenceConfirmationScreen(
                         )
 
                         // safe radius
-                        val distanceBgColor = if (state.isSafe) SuccessContainer else ErrorContainer
-                        val distanceContentColor = if (state.isSafe) InfoGreen else ErrorRed
-                        val distanceBorderColor = if (state.isSafe) SuccessGreen else ErrorRed
+                        val isSafe = state.isSafe
+                        val distanceBgColor = if (state.isLoadingLocation) AppBackground else if (isSafe) SuccessContainer else ErrorContainer
+                        val distanceContentColor = if (state.isLoadingLocation) TertiaryGray else if (isSafe) InfoGreen else ErrorRed
+                        val distanceBorderColor = if (state.isLoadingLocation) TertiaryGray else if (isSafe) SuccessGreen else ErrorRed
 
                         StatCard(
                             label = "Jarak Anda",
-                            value = "${state.currentDistance.toInt()} Meter",
+                            value = distanceText,
                             iconId = R.drawable.ic_nav_arrow,
                             backgroundColor = distanceBgColor,
                             borderStroke = BorderStroke(1.dp, distanceBorderColor.copy(alpha = 0.3f)),
@@ -312,6 +316,7 @@ fun PresenceConfirmationScreen(
 fun FloatingTopBar(
     title: String,
     onBackClick: () -> Unit,
+    onRefreshClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
@@ -348,6 +353,25 @@ fun FloatingTopBar(
                 color = PrimaryBlack,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
+        }
+
+        // tombol refresh
+        Surface(
+            shape = CircleShape,
+            color = Color.White,
+            shadowElevation = 8.dp,
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .size(48.dp)
+        ) {
+            IconButton(onClick = onRefreshClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_refresh),
+                    contentDescription = "Refresh Data",
+                    tint = PrimaryBlack,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
@@ -449,68 +473,4 @@ fun StatCard(
     }
 }
 
-@Preview(name = "1. Masuk - Safe Zone", showBackground = true, showSystemUi = true)
-@Composable
-fun PresenceInSafePreview() {
-    KPRIBinaSejahteraTheme {
-        PresenceConfirmationScreen(
-            isCheckIn = true,
-            state = ConfirmationUiState(
-                officeLat = -6.2,
-                officeLong = 106.8,
-                officeName = "Koperasi Sejahtera Bersama",
-                officeAddress = "Jl. Jendral Sudirman No. 1",
-                maxRadius = 50.0,
-                currentDistance = 15.0,
-                isSafe = true,
-                isLoadingLocation = false
-            ),
-            onBackClick = {},
-            onConfirmClick = {},
-            onUpdateLocation = {}
-        )
-    }
-}
-
-@Preview(name = "2. Pulang - Danger Zone", showBackground = true, showSystemUi = true)
-@Composable
-fun PresenceOutDangerPreview() {
-    KPRIBinaSejahteraTheme {
-        PresenceConfirmationScreen(
-            isCheckIn = false,
-            state = ConfirmationUiState(
-                officeLat = -6.2,
-                officeLong = 106.8,
-                officeName = "Koperasi Sejahtera Bersama",
-                officeAddress = "Jl. Jendral Sudirman No. 1",
-                maxRadius = 50.0,
-                currentDistance = 120.0,
-                isSafe = false,
-                isLoadingLocation = false,
-                error = "Anda berada di luar jangkauan"
-            ),
-            onBackClick = {},
-            onConfirmClick = {},
-            onUpdateLocation = {}
-        )
-    }
-}
-
-
-@Preview(name = "3. Loading State", showBackground = true, showSystemUi = true)
-@Composable
-fun PresenceLoadingPreview() {
-    KPRIBinaSejahteraTheme {
-        PresenceConfirmationScreen(
-            isCheckIn = true,
-            state = ConfirmationUiState(
-                isLoadingLocation = true,
-                officeName = "Memuat data...",
-                officeAddress = "..."
-            ),
-            onBackClick = {},
-            onConfirmClick = {},
-            onUpdateLocation = {}
-        )
-    }
-}
+// preview kuhapus karena malas ngotak atik lagi wkwkwk
