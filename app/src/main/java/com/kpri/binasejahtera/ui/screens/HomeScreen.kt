@@ -1,12 +1,11 @@
 package com.kpri.binasejahtera.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,8 +35,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -48,13 +45,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriInfoCard
 import com.kpri.binasejahtera.ui.components.KpriTopBar
-import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.components.ToastManager
 import com.kpri.binasejahtera.ui.components.ToastType
+import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.theme.AppBackground
 import com.kpri.binasejahtera.ui.theme.ErrorRed
 import com.kpri.binasejahtera.ui.theme.InfoBlue
@@ -63,28 +61,21 @@ import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.SuccessGreen
 import com.kpri.binasejahtera.ui.theme.TertiaryGray
-import com.kpri.binasejahtera.ui.viewmodel.AttendanceViewModel
 import com.kpri.binasejahtera.ui.viewmodel.HomeUiState
-import androidx.core.net.toUri
 
 
 @Composable
 fun HomeScreen(
-    onNavigate: (String) -> Unit
+    state: HomeUiState,
+    onNavigate: (String) -> Unit,
+    onRefresh: () -> Unit
 ) {
-    val viewModel: AttendanceViewModel = hiltViewModel()
-    val state by viewModel.homeState.collectAsState()
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
-
     HomeContent(
         state = state,
         onNavigate = onNavigate,
-        onRefreshLocation = { viewModel.loadUserLocation() },
-
-        isRefreshing = isRefreshing,
-        onRefresh = {
-            viewModel.refreshData()
-        }
+        onRefreshLocation = { },
+        isRefreshing = false,
+        onRefresh = onRefresh
     )
 }
 

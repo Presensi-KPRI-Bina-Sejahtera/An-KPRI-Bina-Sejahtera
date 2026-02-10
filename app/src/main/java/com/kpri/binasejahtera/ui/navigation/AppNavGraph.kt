@@ -127,6 +127,9 @@ fun AppNavGraph(
             val profileViewModel: ProfileViewModel = hiltViewModel()
             val profileState by profileViewModel.profileState.collectAsState()
 
+            val attendanceViewModel: AttendanceViewModel = hiltViewModel()
+            val homeState by attendanceViewModel.homeState.collectAsState()
+
             val currentBackStack = navController.currentBackStackEntry
             val savedStateHandle = currentBackStack?.savedStateHandle
 
@@ -135,7 +138,7 @@ fun AppNavGraph(
             LaunchedEffect(shouldRefresh) {
                 if (shouldRefresh) {
                     profileViewModel.loadProfile(forceUpdate = true)
-
+                    attendanceViewModel.refreshData()
                     savedStateHandle.remove<Boolean>("refresh_profile")
                 }
             }
@@ -158,7 +161,11 @@ fun AppNavGraph(
                         popUpTo(0)
                     }
                 },
-                profileState = profileState
+
+                profileState = profileState,
+
+                homeState = homeState,
+                onRefreshHome = { attendanceViewModel.refreshData() }
             )
         }
 

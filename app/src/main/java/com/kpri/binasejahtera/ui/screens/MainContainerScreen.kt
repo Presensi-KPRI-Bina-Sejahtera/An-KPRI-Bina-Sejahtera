@@ -23,13 +23,16 @@ import com.kpri.binasejahtera.data.remote.dto.ProfileResponse
 import com.kpri.binasejahtera.ui.components.KpriBottomNavigation
 import com.kpri.binasejahtera.ui.theme.AppBackground
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
+import com.kpri.binasejahtera.ui.viewmodel.HomeUiState
 import kotlinx.coroutines.launch
 
 @Composable
 fun MainContainerScreen(
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit,
-    profileState: ProfileResponse?
+    profileState: ProfileResponse?,
+    homeState: HomeUiState,
+    onRefreshHome: () -> Unit
 ) {
     /* implementasi carrousel hehe
      * - 0 = home
@@ -76,7 +79,9 @@ fun MainContainerScreen(
                 page ->
                 when (page) {
                     0 -> HomeScreen(
-                        onNavigate = onNavigate
+                        state = homeState,
+                        onNavigate = onNavigate,
+                        onRefresh = onRefreshHome
                     )
 
                     1 -> PresenceScreen(
