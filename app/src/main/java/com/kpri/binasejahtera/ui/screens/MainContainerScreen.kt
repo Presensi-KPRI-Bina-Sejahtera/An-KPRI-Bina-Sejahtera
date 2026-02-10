@@ -32,6 +32,7 @@ fun MainContainerScreen(
     onLogout: () -> Unit,
     profileState: ProfileResponse?,
     homeState: HomeUiState,
+    isRefreshing: Boolean,
     onRefreshHome: () -> Unit
 ) {
     /* implementasi carrousel hehe
@@ -80,6 +81,7 @@ fun MainContainerScreen(
                 when (page) {
                     0 -> HomeScreen(
                         state = homeState,
+                        isRefreshing = isRefreshing,
                         onNavigate = onNavigate,
                         onRefresh = onRefreshHome
                     )
@@ -125,6 +127,4 @@ fun MainContainerScreen(
             )
         }
     }
-
-
 }

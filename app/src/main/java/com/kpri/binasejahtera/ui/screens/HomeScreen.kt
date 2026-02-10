@@ -67,6 +67,7 @@ import com.kpri.binasejahtera.ui.viewmodel.HomeUiState
 @Composable
 fun HomeScreen(
     state: HomeUiState,
+    isRefreshing: Boolean,
     onNavigate: (String) -> Unit,
     onRefresh: () -> Unit
 ) {
@@ -74,7 +75,7 @@ fun HomeScreen(
         state = state,
         onNavigate = onNavigate,
         onRefreshLocation = { },
-        isRefreshing = false,
+        isRefreshing = isRefreshing,
         onRefresh = onRefresh
     )
 }

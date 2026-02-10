@@ -130,6 +130,8 @@ fun AppNavGraph(
             val attendanceViewModel: AttendanceViewModel = hiltViewModel()
             val homeState by attendanceViewModel.homeState.collectAsState()
 
+            val isRefreshing by attendanceViewModel.isRefreshing.collectAsState()
+
             val currentBackStack = navController.currentBackStackEntry
             val savedStateHandle = currentBackStack?.savedStateHandle
 
@@ -165,6 +167,7 @@ fun AppNavGraph(
                 profileState = profileState,
 
                 homeState = homeState,
+                isRefreshing = isRefreshing,
                 onRefreshHome = { attendanceViewModel.refreshData() }
             )
         }
