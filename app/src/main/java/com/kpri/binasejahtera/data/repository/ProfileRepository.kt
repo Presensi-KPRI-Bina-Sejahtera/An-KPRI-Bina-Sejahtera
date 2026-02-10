@@ -3,6 +3,7 @@ package com.kpri.binasejahtera.data.repository
 import com.kpri.binasejahtera.data.remote.ApiService
 import com.kpri.binasejahtera.data.remote.dto.ProfileResponse
 import com.kpri.binasejahtera.data.remote.dto.UpdateProfileRequest
+import com.kpri.binasejahtera.utils.ApiErrorUtils
 import com.kpri.binasejahtera.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -35,7 +36,8 @@ class ProfileRepository @Inject constructor(
 
                 emit(Resource.Success(data))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal memuat profil"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
@@ -53,7 +55,8 @@ class ProfileRepository @Inject constructor(
 
                 emit(Resource.Success(data))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal update profil"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
@@ -68,7 +71,8 @@ class ProfileRepository @Inject constructor(
                 cachedProfile = null
                 emit(Resource.Success(response.body()?.message ?: "Foto berhasil diupload"))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal upload foto"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))

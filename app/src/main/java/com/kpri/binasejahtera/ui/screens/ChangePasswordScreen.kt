@@ -26,6 +26,8 @@ import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
 import com.kpri.binasejahtera.ui.components.KpriTextField
 import com.kpri.binasejahtera.ui.components.KpriTopBar
+import com.kpri.binasejahtera.ui.components.ToastManager
+import com.kpri.binasejahtera.ui.components.ToastType
 import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.theme.AccentBlue
 import com.kpri.binasejahtera.ui.theme.AppBackground
@@ -77,7 +79,7 @@ fun ChangePasswordScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Password baru harus terdiri dari minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka.",
+                    text = "Password harus terdiri dari minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka.",
                     style = MaterialTheme.typography.labelMedium,
                     color = InfoBlue,
                     modifier = Modifier
@@ -133,6 +135,26 @@ fun ChangePasswordScreen(
             KpriPrimaryButton(
                 text = buttonText,
                 onClick = {
+                    if (!isFirstTime && currentPass.isBlank()) {
+                        ToastManager.show("Password saat ini wajib diisi", ToastType.ERROR)
+                        return@KpriPrimaryButton
+                    }
+
+                    // 2. Cek Konfirmasi Password
+                    if (newPass != confirmPass) {
+                        ToastManager.show("Konfirmasi password tidak cocok", ToastType.ERROR)
+                        return@KpriPrimaryButton
+                    }
+
+                    // 3. Cek Kompleksitas Password
+                    if (!isValidPassword(newPass)) {
+                        ToastManager.show(
+                            "Password kurang kuat (Minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka)",
+                            ToastType.ERROR
+                        )
+                        return@KpriPrimaryButton
+                    }
+
                     val finalCurrentPass = if (isFirstTime) "" else currentPass
                     onSavePassword(finalCurrentPass, newPass, confirmPass)
                 },
@@ -142,6 +164,16 @@ fun ChangePasswordScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+// password condition checker
+fun isValidPassword(password: String): Boolean {
+    if (password.length < 8) return false
+    val hasUpperCase = password.any { it.isUpperCase() }
+    val hasLowerCase = password.any { it.isLowerCase() }
+    val hasDigit = password.any { it.isDigit() }
+
+    return hasUpperCase && hasLowerCase && hasDigit
 }
 
 @Preview(name = "1. User Lama (Bisa Ganti Password)", showBackground = true, showSystemUi = true)

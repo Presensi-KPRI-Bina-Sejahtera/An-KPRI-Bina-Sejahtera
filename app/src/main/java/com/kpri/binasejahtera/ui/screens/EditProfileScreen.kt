@@ -46,6 +46,8 @@ import com.kpri.binasejahtera.data.remote.dto.ProfileResponse
 import com.kpri.binasejahtera.ui.components.KpriPrimaryButton
 import com.kpri.binasejahtera.ui.components.KpriTextField
 import com.kpri.binasejahtera.ui.components.KpriTopBar
+import com.kpri.binasejahtera.ui.components.ToastManager
+import com.kpri.binasejahtera.ui.components.ToastType
 import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.theme.AccentBlue
 import com.kpri.binasejahtera.ui.theme.AppBackground
@@ -88,6 +90,13 @@ fun EditProfileScreen(
         uri?.let {
             val file = uriToFile(context, it)
             if (file != null) {
+                val maxSizeInBytes = 512 * 1024
+
+                if (file.length() > maxSizeInBytes) {
+                    ToastManager.show("Ukuran foto terlalu besar (Maks 512KB)", ToastType.ERROR)
+                    return@let
+                }
+
                 val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
                 val body = MultipartBody.Part.createFormData("photo", file.name, requestFile)
                 onUploadPhoto(body)

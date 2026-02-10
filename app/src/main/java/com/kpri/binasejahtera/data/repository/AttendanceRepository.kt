@@ -5,6 +5,7 @@ import com.kpri.binasejahtera.data.remote.dto.AttendanceActionResponse
 import com.kpri.binasejahtera.data.remote.dto.AttendanceRequest
 import com.kpri.binasejahtera.data.remote.dto.AttendanceStatusResponse
 import com.kpri.binasejahtera.data.remote.dto.OfficeResponse
+import com.kpri.binasejahtera.utils.ApiErrorUtils
 import com.kpri.binasejahtera.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -40,7 +41,8 @@ class AttendanceRepository @Inject constructor(
                 cachedStatus = data
                 emit(Resource.Success(data))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal memuat status presensi"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
@@ -57,7 +59,8 @@ class AttendanceRepository @Inject constructor(
                 cachedOffice = data
                 emit(Resource.Success(data))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal memuat lokasi kantor"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
@@ -76,7 +79,8 @@ class AttendanceRepository @Inject constructor(
                 cachedStatus = null
                 emit(Resource.Success(result.data))
             } else {
-                emit(Resource.Error(result?.message ?: "Gagal Presensi Masuk"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
@@ -95,7 +99,8 @@ class AttendanceRepository @Inject constructor(
                 cachedStatus = null
                 emit(Resource.Success(result.data))
             } else {
-                emit(Resource.Error(result?.message ?: "Gagal Presensi Pulang"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))

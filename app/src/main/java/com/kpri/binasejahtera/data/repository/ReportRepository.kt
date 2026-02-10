@@ -3,6 +3,7 @@ package com.kpri.binasejahtera.data.repository
 import com.kpri.binasejahtera.data.remote.ApiService
 import com.kpri.binasejahtera.data.remote.dto.CashflowRequest
 import com.kpri.binasejahtera.data.remote.dto.DepositRequest
+import com.kpri.binasejahtera.utils.ApiErrorUtils
 import com.kpri.binasejahtera.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -18,7 +19,8 @@ class ReportRepository @Inject constructor(
             if (response.isSuccessful) {
                 emit(Resource.Success(response.body()?.message ?: "Laporan Keuangan terkirim"))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal mengirim laporan"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
@@ -32,7 +34,8 @@ class ReportRepository @Inject constructor(
             if (response.isSuccessful) {
                 emit(Resource.Success(response.body()?.message ?: "Setoran berhasil disimpan"))
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Gagal menyimpan setoran"))
+                val errorMsg = ApiErrorUtils.parseMessage(response.errorBody())
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Terjadi kesalahan jaringan"))
