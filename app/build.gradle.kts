@@ -18,6 +18,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BASE_URL", "\"https://be-presensi-beta.trisuladana.com/api/\"")
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"364805871560-5sbnmaojh82j4c4hn29a64nni1f7p8vs.apps.googleusercontent.com\"")
     }
 
     buildTypes {
@@ -40,6 +42,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

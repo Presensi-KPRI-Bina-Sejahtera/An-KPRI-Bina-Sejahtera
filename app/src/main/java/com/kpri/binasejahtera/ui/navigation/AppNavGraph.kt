@@ -22,6 +22,7 @@ import androidx.navigation.navArgument
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.kpri.binasejahtera.BuildConfig
 import com.kpri.binasejahtera.R
 import com.kpri.binasejahtera.ui.components.KpriDialog
 import com.kpri.binasejahtera.ui.components.ToastManager
@@ -61,7 +62,7 @@ fun AppNavGraph(
                         // google public clientID
                         val googleIdOption = GetGoogleIdOption.Builder()
                             .setFilterByAuthorizedAccounts(false)
-                            .setServerClientId("364805871560-5sbnmaojh82j4c4hn29a64nni1f7p8vs.apps.googleusercontent.com")
+                            .setServerClientId(BuildConfig.GOOGLE_CLIENT_ID)
                             .setAutoSelectEnabled(false)
                             .build()
 

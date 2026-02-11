@@ -1,5 +1,6 @@
 package com.kpri.binasejahtera.di
 
+import com.kpri.binasejahtera.BuildConfig
 import com.kpri.binasejahtera.data.remote.ApiService
 import com.kpri.binasejahtera.utils.AuthInterceptor
 import dagger.Module
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 object NetworkModule {
 
     // pastikan URL diakhiri dengan "/" (soalnya tadi bingung kenapa kok g bisa)
-    private const val BASE_URL = "https://be-presensi-beta.trisuladana.com/api/"
+    private const val BASE_URL = BuildConfig.BASE_URL
 
     @Provides
     @Singleton
