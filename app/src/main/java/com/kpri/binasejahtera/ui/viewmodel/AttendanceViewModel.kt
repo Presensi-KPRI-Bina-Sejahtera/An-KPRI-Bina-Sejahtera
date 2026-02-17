@@ -32,7 +32,9 @@ import javax.inject.Inject
 // untuk draft laporan keuangan/daily report (biar data ngga ilang klo mencet back)
 data class ReportDraft(
     val pemasukan: String = "",
+    val keterangan_pemasukan: String? = null,
     val pengeluaran: String = "",
+    val keterangan_pengeluaran: String? = null,
     val deposits: List<DepositDraftItem> = emptyList()
 )
 
@@ -459,10 +461,18 @@ class AttendanceViewModel @Inject constructor(
     }
 
     // simpen draft dailyreport
-    fun updateReportDraft(pemasukan: String, pengeluaran: String, deposits: List<DepositDraftItem>) {
+    fun updateReportDraft(
+        pemasukan: String,
+        keteranganPemasukan: String?,
+        pengeluaran: String,
+        keteranganPengeluaran: String?,
+        deposits: List<DepositDraftItem>
+    ) {
         _reportDraft.value = ReportDraft(
             pemasukan = pemasukan,
+            keterangan_pemasukan = keteranganPemasukan,
             pengeluaran = pengeluaran,
+            keterangan_pengeluaran = keteranganPengeluaran,
             deposits = deposits
         )
     }
@@ -481,7 +491,12 @@ class AttendanceViewModel @Inject constructor(
 
                 if (!uploadStatus.isCashflowSent) {
                     var isCashflowFailed = false
-                    val cashflowReq = CashflowRequest(cleanPemasukan, cleanPengeluaran)
+                    val cashflowReq = CashflowRequest(
+                        pemasukan = cleanPemasukan,
+                        keterangan_pemasukan = if (report.keterangan_pemasukan.isNullOrBlank()) null else report.keterangan_pemasukan,
+                        pengeluaran = cleanPengeluaran,
+                        keterangan_pengeluaran = if (report.keterangan_pengeluaran.isNullOrBlank()) null else report.keterangan_pengeluaran
+                    )
 
                     reportRepository.sendCashflow(cashflowReq).collect { res ->
                         if (res is Resource.Error) {

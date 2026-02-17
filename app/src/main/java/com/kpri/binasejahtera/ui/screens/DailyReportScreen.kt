@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,7 +51,6 @@ import com.kpri.binasejahtera.ui.components.ToastType
 import com.kpri.binasejahtera.ui.components.TopBarConfig
 import com.kpri.binasejahtera.ui.theme.AppBackground
 import com.kpri.binasejahtera.ui.theme.ErrorRed
-import com.kpri.binasejahtera.ui.theme.InfoBlue
 import com.kpri.binasejahtera.ui.theme.PrimaryBlack
 import com.kpri.binasejahtera.ui.theme.Shapes
 import com.kpri.binasejahtera.ui.theme.SuccessGreen
@@ -69,7 +67,10 @@ fun DailyReportScreen(
     val draftState by viewModel.reportDraft.collectAsState()
 
     var pemasukan by remember { mutableStateOf(draftState.pemasukan) }
+    var keterangan_pemasukan by remember { mutableStateOf(draftState.keterangan_pemasukan) }
     var pengeluaran by remember { mutableStateOf(draftState.pengeluaran) }
+    var keterangan_pengeluaran by remember { mutableStateOf(draftState.keterangan_pengeluaran) }
+
 
     val depositList = remember {
         mutableStateListOf<DepositDraftItem>().apply {
@@ -83,7 +84,12 @@ fun DailyReportScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.updateReportDraft(pemasukan, pengeluaran, depositList.toList())
+            viewModel.updateReportDraft(
+                pemasukan,
+                keterangan_pemasukan,
+                pengeluaran,
+                keterangan_pengeluaran,
+                depositList.toList())
         }
     }
 
@@ -140,6 +146,15 @@ fun DailyReportScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    KpriTextField(
+                        value = keterangan_pemasukan ?: "",
+                        label = "Keterangan Pemasukan",
+                        placeholder = "Keterangan (Opsional)",
+                        onValueChange = { keterangan_pemasukan = it },
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // pengeluaran
                     KpriTextField(
                         value = pengeluaran,
@@ -149,6 +164,15 @@ fun DailyReportScreen(
                         iconColor = ErrorRed,
                         onValueChange = { pengeluaran = it },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    KpriTextField(
+                        value = keterangan_pengeluaran ?: "",
+                        label = "Keterangan Pengeluaran",
+                        placeholder = "Keterangan (Opsional)",
+                        onValueChange = { keterangan_pengeluaran = it },
                     )
                 }
             }
@@ -212,7 +236,12 @@ fun DailyReportScreen(
                     }
 
                     // simpen datanya dulu sblm navigasi
-                    viewModel.updateReportDraft(pemasukan, pengeluaran, depositList.toList())
+                    viewModel.updateReportDraft(
+                        pemasukan,
+                        keterangan_pemasukan,
+                        pengeluaran,
+                        keterangan_pengeluaran,
+                        depositList.toList())
 
                     onNavigateNext()
                 },
@@ -221,6 +250,35 @@ fun DailyReportScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
         }
+    }
+}
+
+@Composable
+fun SectionHeader(text: String, iconId: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(PrimaryBlack),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = iconId),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryBlack
+        )
     }
 }
 
@@ -297,105 +355,65 @@ fun DepositCard(
     }
 }
 
-
-@Composable
-fun SectionHeader(text: String, iconId: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            painter = painterResource(id = iconId),
-            contentDescription = null,
-            tint = TertiaryGray,
-            modifier = Modifier.size(16.dp)
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            color = TertiaryGray,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
 @Composable
 fun ReportTypeToggle(
     isSimpanan: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        // simpanan
-        TypeButton(
-            text = "Simpanan",
-            isSelected = isSimpanan,
-            color = InfoBlue,
-            modifier = Modifier.weight(1f),
-            onClick = { onToggle(true) }
+    Column {
+        Text(
+            text = "Jenis Setoran",
+            style = MaterialTheme.typography.bodyLarge,
+            color = PrimaryBlack
         )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // angsuran
-        TypeButton(
-            text = "Angsuran",
-            isSelected = !isSimpanan,
-            color = InfoBlue,
-            modifier = Modifier.weight(1f),
-            onClick = { onToggle(false) }
-        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(Shapes.medium)
+                .background(TertiaryGray.copy(alpha = 0.05f))
+                .border(1.dp, TertiaryGray.copy(alpha = 0.1f), Shapes.medium)
+                .padding(4.dp)
+        ) {
+            ToggleButton(
+                text = "Simpanan",
+                isSelected = isSimpanan,
+                onClick = { onToggle(true) },
+                modifier = Modifier.weight(1f)
+            )
+            ToggleButton(
+                text = "Angsuran",
+                isSelected = !isSimpanan,
+                onClick = { onToggle(false) },
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
 @Composable
-fun TypeButton(
+fun ToggleButton(
     text: String,
     isSelected: Boolean,
-    color: Color,
-    modifier: Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = Shapes.small,
-        color = if (isSelected) color.copy(alpha = 0.1f) else Color.White,
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (isSelected) color else TertiaryGray.copy(alpha = 0.3f)
-        ),
-        modifier = modifier
-            .height(40.dp)
-            .clickable { onClick() }
+        onClick = onClick,
+        color = if (isSelected) Color.White else Color.Transparent,
+        shape = Shapes.medium,
+        modifier = modifier.height(36.dp),
+        shadowElevation = if (isSelected) 4.dp else 0.dp
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
-            // radio
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .clip(CircleShape)
-                    .then(
-                        if (isSelected) {
-                            Modifier.background(color)
-                        } else {
-                            Modifier
-                                .border(
-                                    2.dp,
-                                    TertiaryGray.copy(alpha = 0.3f),
-                                    CircleShape)
-                                .background(Color.Transparent)
-                        }
-                    )
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (isSelected) color else TertiaryGray,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.labelLarge,
+                color = if (isSelected) PrimaryBlack else TertiaryGray,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
         }
     }

@@ -7,8 +7,14 @@ data class CashflowRequest(
     @SerializedName("pemasukan")
     val pemasukan: Long,
 
+    @SerializedName("keterangan_pemasukan")
+    val keterangan_pemasukan: String? = null,
+
     @SerializedName("pengeluaran")
-    val pengeluaran: Long
+    val pengeluaran: Long,
+
+    @SerializedName("keterangan_pengeluaran")
+    val keterangan_pengeluaran: String? = null
 )
 
 // --- Deposit ---
