@@ -74,6 +74,7 @@ data class ConfirmationUiState(
     val isSafe: Boolean = false,
     val isLoadingLocation: Boolean = true,
     val isAlreadyDone: Boolean = false,
+    val isDevModeActive: Boolean = false,
     val error: String? = null
 )
 
@@ -383,7 +384,9 @@ class AttendanceViewModel @Inject constructor(
     }
 
     private suspend fun getUserLocation() {
+        val isDevMode = locationHelper.isDeveloperModeEnabled()
         val location = locationHelper.getCurrentLocation()
+        
         if (location != null) {
             val userLat = location.latitude
             val userLong = location.longitude
@@ -405,12 +408,14 @@ class AttendanceViewModel @Inject constructor(
                 currentDistance = distance.toDouble(),
                 isSafe = isSafe,
                 isLoadingLocation = false,
-                error = null
+                isDevModeActive = isDevMode,
+                error = if (isDevMode) "Developer Mode Terdeteksi. Harap matikan Developer Options di pengaturan HP Anda." else null
             )
         } else {
             _confirmationState.value = _confirmationState.value.copy(
                 isLoadingLocation = false,
-                error = "Gagal mendapatkan lokasi GPS. Pastikan GPS aktif."
+                isDevModeActive = isDevMode,
+                error = if (isDevMode) "Developer Mode Terdeteksi. Matikan untuk melanjutkan." else "Gagal mendapatkan lokasi GPS. Pastikan GPS aktif."
             )
         }
     }
@@ -478,6 +483,13 @@ class AttendanceViewModel @Inject constructor(
     }
 
     fun performAttendance(isCheckIn: Boolean) {
+        if (_confirmationState.value.isDevModeActive) {
+            viewModelScope.launch {
+                _attendanceEvent.send(AttendanceEvent.Error("Developer Mode aktif. Harap matikan di pengaturan HP."))
+            }
+            return
+        }
+
         val lat = _confirmationState.value.userLat
         val long = _confirmationState.value.userLong
 

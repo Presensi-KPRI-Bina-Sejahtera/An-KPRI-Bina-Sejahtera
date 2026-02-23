@@ -115,7 +115,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = "Versi Aplikasi 1.0.1.0",
+                text = "Versi Aplikasi 1.0.2.0",
                 style = MaterialTheme.typography.labelSmall,
                 color = TertiaryGray.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center

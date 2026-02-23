@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
 import android.location.Location
+import android.provider.Settings
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,6 +20,13 @@ class LocationHelper @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+    fun isDeveloperModeEnabled(): Boolean {
+        return Settings.Secure.getInt(
+            context.contentResolver,
+            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
+        ) != 0
+    }
 
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(): Location? {

@@ -1,7 +1,9 @@
 package com.kpri.binasejahtera.ui.screens
 
 import android.app.Activity
+import android.content.Intent
 import android.content.IntentSender
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -282,15 +284,28 @@ fun PresenceConfirmationScreen(
                         )
                     }
 
-                    // tombol presensi
-                    KpriPrimaryButton(
-                        text = "$title Sekarang",
-                        iconId = R.drawable.ic_map,
-                        onClick = onConfirmClick,
-                        isIconStart = true,
-                        enabled = state.isSafe && !state.isLoadingLocation && !state.isAlreadyDone,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    // tombol presensi atau tombol buka pengaturan jika dev mode aktif
+                    if (state.isDevModeActive) {
+                        KpriPrimaryButton(
+                            text = "Matikan Developer Mode",
+                            iconId = R.drawable.ic_settings, // Ganti dengan icon yang sesuai jika ada
+                            onClick = {
+                                context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+                            },
+                            isIconStart = true,
+                            containerColor = ErrorRed,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        KpriPrimaryButton(
+                            text = "$title Sekarang",
+                            iconId = R.drawable.ic_map,
+                            onClick = onConfirmClick,
+                            isIconStart = true,
+                            enabled = state.isSafe && !state.isLoadingLocation && !state.isAlreadyDone,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -340,7 +355,7 @@ fun FloatingTopBar(
             }
         }
 
-        // label judul info
+        // title
         Surface(
             shape = CircleShape,
             color = Color.White,
@@ -408,13 +423,11 @@ fun LocationDetailCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = TertiaryGray
                 )
-
                 Text(
                     text = locationName,
                     style = MaterialTheme.typography.labelMedium,
                     color = PrimaryBlack
                 )
-
                 Text(
                     text = address,
                     style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
@@ -462,7 +475,6 @@ fun StatCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                 }
-
                 Text(
                     text = value,
                     style = MaterialTheme.typography.bodyLarge,
